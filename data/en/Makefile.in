@@ -1,0 +1,46 @@
+#!/usr/bin/make
+# @configure_input@
+
+toolsdir = @PWD@/tools
+
+WGET = @WGET@
+
+
+# HTS demo:
+# =========
+# -- Download parameters --
+HTSDemo_File = HTS-demo_CMU-ARCTIC-SLT.tar.bz2
+HTSDemo_MD5  = 162e3705d134f0cd575fe2b938187cae
+HTSDemo_URL  = http://hts.sp.nitech.ac.jp/archives/2.2/HTS-demo_CMU-ARCTIC-SLT.tar.bz2
+
+
+ALLDOWNLOADS = HTSDemo
+ALLCONFIGURES = HTSDemo
+download_all = $(addprefix download_,$(ALLDOWNLOADS)) 
+configure_all = $(addprefix configure_,$(ALLCONFIGURES)) 
+
+all: lang_en
+
+lang_en: $(download_all) $(configure_all)
+
+# This target will check if the downloads are correct. If they are not
+# it will download them again, using a password if needed.
+$(download_all):
+	echo "$($(subst download_,,$@)_MD5)  $($(subst download_,,$@)_File)" | md5sum -c --status && echo "$(subst download_,,$@) already downloaded" || \
+	( rm -f $($(subst download_,,$@)_File) && \
+	$(WGET) --http-user=$($(subst download_,,$@)_USER) --http-password=$($(subst download_,,$@)_PASSWORD) --output-document=$($(subst download_,,$@)_File) $($(subst download_,,$@)_URL) )
+
+
+configure_HTSDemo: download_HTSDemo
+	mkdir -p template raw utts wav && \
+	mkdir -p utts/arctic-slt raw/arctic-slt && \
+	if [ ! -f template/configure.ac ] || [ ! -f raw/arctic-slt/cmu_us_arctic_slt_a0001.raw ] ; then \
+		tar xjf $(HTSDemo_File) && \
+		mv HTS-demo_CMU-ARCTIC-SLT/data/raw/*.raw raw/arctic-slt  && \
+		mv HTS-demo_CMU-ARCTIC-SLT/data/utts/*.utt utts/arctic-slt  && \
+		mv HTS-demo_CMU-ARCTIC-SLT/* template && \
+		rm -rf HTS-demo_CMU-ARCTIC-SLT; \
+	fi
+
+
+

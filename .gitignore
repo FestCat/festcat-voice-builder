@@ -10,3 +10,10 @@ deps/hts/
 deps/hts_engine_API-1.05/
 deps/htspatch/
 *Makefile
+work
+tools
+autoscan.log
+configure.scan
+*.raw
+data/en/template
+*.utt

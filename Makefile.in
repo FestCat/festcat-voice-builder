@@ -11,7 +11,32 @@ prefix         = @prefix@
 exec_prefix    = @exec_prefix@
 bindir         = @bindir@
 
+depsdir = @PWD@/deps
+toolsdir = @PWD@/tools
+workdir = @PWD@/work
+datdir = @PWD@/data
+
 dependencies:
-	cd "deps" && \
+	cd $(depsdir) && \
 	make all
+
+lang_en: dependencies
+	cd $(datdir)/en && \
+	make lang_en
+
+en_slt: lang_en
+	if [ ! -f $(workdir)/en_slt/configure.ac ] || [ ! -f $(workdir)/en_slt/data/utts/cmu_us_arctic_slt_a0001.utt ]; then \
+		mkdir -p $(workdir)/en_slt && \
+		cp -r $(datdir)/en/template/* $(workdir)/en_slt/ && \
+		mkdir -p $(workdir)/data/raw $(workdir)/en_slt/data/utts && \
+		cp $(datdir)/en/raw/arctic-slt/*.raw $(workdir)/en_slt/data/raw && \
+		cp $(datdir)/en/utts/arctic-slt/*.utt $(workdir)/en_slt/data/utts; \
+	fi; \
+	cd $(workdir)/en_slt && \
+	./configure --with-fest-search-path=$(toolsdir)/festival/examples \
+		    --with-sptk-search-path=$(toolsdir)/bin \
+	            --with-hts-search-path=$(toolsdir)/bin  \
+	            --with-hts-engine-search-path=$(toolsdir)/bin && \
+	$(MAKE) data && \
+	$(MAKE) voice
 
