@@ -1,4 +1,4 @@
-AC_INIT(festcat-voice-building, 0.1, sergioller@gmail.com)
+AC_INIT(festcat-voice-builder, 0.1, sergioller@gmail.com)
 AC_PREREQ()
 AC_PROG_MAKE_SET()
 #package information
