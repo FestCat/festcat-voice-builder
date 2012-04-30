@@ -9,4 +9,4 @@ deps/SPTK-3.4.1/
 deps/hts/
 deps/hts_engine_API-1.05/
 deps/htspatch/
-
+*Makefile
