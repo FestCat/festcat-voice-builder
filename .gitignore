@@ -1,0 +1,12 @@
+deps/HTK-*.tar.gz
+deps/HDecode*.tar.gz
+config.log
+config.status
+install
+autom4te.cache
+deps/HTS-demo_CMU-ARCTIC-SLT/
+deps/SPTK-3.4.1/
+deps/hts/
+deps/hts_engine_API-1.05/
+deps/htspatch/
+

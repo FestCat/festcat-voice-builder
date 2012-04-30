@@ -1,0 +1,153 @@
+#!/usr/bin/make
+# @configure_input@
+
+rootdir = @prefix@/deps
+
+WGET = @WGET@
+
+# HTS demo:
+# =========
+# -- Download parameters --
+HTSDemo_File = HTS-demo_CMU-ARCTIC-SLT.tar.bz2
+HTSDemo_MD5  = 162e3705d134f0cd575fe2b938187cae
+HTSDemo_URL  = http://hts.sp.nitech.ac.jp/archives/2.2/HTS-demo_CMU-ARCTIC-SLT.tar.bz2
+
+# Festival:
+# =========
+# -- Download parameters--
+Festival_File = festival-2.1-release.tar.gz
+Festival_MD5 = c93eb3e389ed171ab9abd46afe8897a8
+Festival_URL = http://www.cstr.ed.ac.uk/downloads/festival/2.1/festival-2.1-release.tar.gz
+
+# Speech tools:
+# =========
+# -- Download parameters--
+SpeechTools_File = speech_tools-2.1-release.tar.gz
+SpeechTools_MD5 = 6920ddc75b042910a3bcfee3ab106938
+SpeechTools_URL = http://www.cstr.ed.ac.uk/downloads/festival/2.1/speech_tools-2.1-release.tar.gz
+
+# SPTK:
+# =========
+# -- Download parameters--
+SPTK_File = SPTK-3.4.1.tar.gz
+SPTK_MD5 = 42615c62edcc0e1df5a83535d0b074f2
+SPTK_URL = http://sourceforge.net/projects/sp-tk/files/SPTK/SPTK-3.4.1/SPTK-3.4.1.tar.gz/download
+
+# hts_engine:
+# =========
+# -- Download parameters--
+htsengine_File = hts_engine_API-1.05.tar.gz
+htsengine_MD5 = cd711b63b2bb8ce42fadb234e735a5fd
+htsengine_URL = http://sourceforge.net/projects/hts-engine/files/hts_engine%20API/hts_engine_API-1.05/hts_engine_API-1.05.tar.gz/download
+
+# HTS:
+# =========
+# -- Download parameters--
+HTS_File = HTS-2.2_for_HTK-3.4.1.tar.bz2
+HTS_MD5 = 76b7674a01f1edfeb5b4bbca4f5e39a2
+HTS_URL = http://hts.sp.nitech.ac.jp/archives/2.2/HTS-2.2_for_HTK-3.4.1.tar.bz2
+
+# HTK:
+# =========
+# -- Download parameters--
+HTK_File = HTK-3.4.1.tar.gz
+HTK_MD5 = b3fc12006b0af12f59cd573c07aa4c1d
+HTK_URL = http://htk.eng.cam.ac.uk/ftp/software/HTK-3.4.1.tar.gz
+HTK_USER = @htk_user@
+HTK_PASSWORD = @htk_password@
+
+# HDecode:
+# =========
+# -- Download parameters--
+HDecode_File = HDecode-3.4.1.tar.gz
+HDecode_MD5 = 4e332a7fea6db58751cec878b80c3575
+HDecode_URL = http://htk.eng.cam.ac.uk/ftp/software/hdecode/HDecode-3.4.1.tar.gz
+HDecode_USER = @htk_user@
+HDecode_PASSWORD = @htk_password@
+
+
+ALLDOWNLOADS = HTSDemo Festival SpeechTools SPTK htsengine HTS HTK HDecode
+ALLCONFIGURES = HTSDemo Festival SpeechTools SPTK htsengine HTS
+download_all = $(addprefix download_,$(ALLDOWNLOADS)) 
+configure_all = $(addprefix configure_,$(ALLCONFIGURES)) 
+
+.PHONY: all $(download_all) $(configure_all)
+all: $(download_all) $(configure_all)
+
+# This target will check if the downloads are correct. If they are not
+# it will download them again, using a password if needed.
+$(download_all):
+	echo "$($(subst download_,,$@)_MD5)  $($(subst download_,,$@)_File)" | md5sum -c --status && echo "$(subst download_,,$@) already downloaded" || \
+	( rm -f $($(subst download_,,$@)_File) && \
+	$(WGET) --http-user=$($(subst download_,,$@)_USER) --http-password=$($(subst download_,,$@)_PASSWORD) --output-document=$($(subst download_,,$@)_File) $($(subst download_,,$@)_URL) )
+
+# SpeechTools and Festival have strange building systems and relative directories, 
+# so I just follow the default behaviour.
+# FIXME: Add test for alsa and ncurses to configure.ac from speech_tools/configure.ac
+configure_SpeechTools: download_SpeechTools
+	if [ ! -f $(rootdir)/speech_tools/bin/ch_wave ]; then \
+		rm -rf $(rootdir)/speech_tools && \
+		tar xzf $(SpeechTools_File) && \
+		mv "speech_tools" $(rootdir) && \
+		cd $(rootdir)/speech_tools && \
+		./configure && \
+		make && \
+		make install; \
+	fi
+
+configure_Festival: download_Festival configure_SpeechTools
+	if [ ! -f $(rootdir)/festival/bin/festival ]; then \
+		rm -rf $(rootdir)/festival && \
+		tar xzf $(Festival_File) && \
+		mv "festival" $(rootdir) && \
+		cd $(rootdir)/"festival" && \
+		./configure && \
+		make && \
+		make install; \
+	fi
+
+configure_SPTK: download_SPTK
+	if [ ! -f $(rootdir)/bin/x2x ]; then \
+		rm -rf "SPTK-3.4.1" && \
+		tar xzf $(SPTK_File) && \
+		cd "SPTK-3.4.1" && \
+		./configure --prefix=$(rootdir) && \
+		make && \
+		make install; \
+	fi
+
+configure_htsengine: download_htsengine
+	if [ ! -f $(rootdir)/bin/hts_engine ]; then \
+		rm -rf "hts_engine_API-1.05" && \
+		tar xzf $(htsengine_File) && \
+		cd "hts_engine_API-1.05" && \
+		./configure --prefix=$(rootdir) && \
+		make && \
+		make install; \
+	fi
+
+# I am removing the need for ActiveTcl by installing libsnack and libx11-dev
+# FIXME: Proper tests are required in configure.ac.
+configure_HTS: download_HTS download_HDecode download_HTS
+	if [ ! -f $(rootdir)/bin/HHEd ]; then \
+		rm -rf hts htspatch && \
+		tar xzf $(HTK_File) && \
+		tar xzf $(HDecode_File) && \
+		rm -rf hts && \
+		mv htk hts && \
+		mkdir -p htspatch && \
+		cp $(HTS_File) htspatch && \
+		cd htspatch && \
+		tar xjf $(HTS_File) && \
+		mv HTS-2.2_for_HTK-3.4.1.patch ../hts && \
+		cd ../hts && \
+		patch -p1 -d . < HTS-2.2_for_HTK-3.4.1.patch && \
+		./configure --enable-hdecode CFLAGS="-fopenmp" --prefix=$(rootdir) && \
+		make all && \
+		make install; \
+	fi
+
+configure_HTSDemo: configure_HTS configure_SPTK configure_Festival configure_htsengine
+	if [ ! -d HTS-demo_CMU-ARCTIC-SLT ]; then \
+		tar xjf $(HTSDemo_File); \
+	fi
