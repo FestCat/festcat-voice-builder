@@ -12,6 +12,6 @@ exec_prefix    = @exec_prefix@
 bindir         = @bindir@
 
 dependencies:
-	cd "deps"
-	make
+	cd "deps" && \
+	make all
 
