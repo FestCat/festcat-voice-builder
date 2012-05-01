@@ -20,15 +20,18 @@ dependencies:
 	cd $(depsdir) && \
 	make all
 
-lang_en: dependencies
-	cd $(datdir)/en && \
-	make lang_en
+ALLLANG = en ca
+lang_all = $(addprefix lang_,$(ALLDOWNLOADS)) 
+$(lang_all): dependencies
+	cd $(datdir)/$(subst lang_,,$@) && \
+	make $@
 
 en_slt: lang_en
 	if [ ! -f $(workdir)/en_slt/configure.ac ] || [ ! -f $(workdir)/en_slt/data/utts/cmu_us_arctic_slt_a0001.utt ]; then \
+		rm -rf $(workdir)/en_slt && \
 		mkdir -p $(workdir)/en_slt && \
 		cp -r $(datdir)/en/template/* $(workdir)/en_slt/ && \
-		mkdir -p $(workdir)/data/raw $(workdir)/en_slt/data/utts && \
+		mkdir -p $(workdir)/en_slt/data/raw $(workdir)/en_slt/data/utts && \
 		cp $(datdir)/en/raw/arctic-slt/*.raw $(workdir)/en_slt/data/raw && \
 		cp $(datdir)/en/utts/arctic-slt/*.utt $(workdir)/en_slt/data/utts; \
 	fi; \
@@ -40,3 +43,23 @@ en_slt: lang_en
 	$(MAKE) data && \
 	$(MAKE) voice
 
+ca_ona: lang_ca
+	if [ ! -f $(workdir)/ca_ona/configure.ac ] || [ ! -f $(workdir)/ca_ona/data/utts/*.utt ]; then \
+		rm -rf $(workdir)/ca_ona && \
+		mkdir -p $(workdir)/ca_ona && \
+		cp -r $(datdir)/ca/template/* $(workdir)/ca_ona/ && \
+		mkdir -p $(workdir)/ca_ona/data/raw $(workdir)/ca_ona/data/utts && \
+		tar xzf $(datdir)/ca/raw/upc_ca_ona_raw.tgz && \
+		mv $(datdir)/ca/raw/upc_ca_ona_raw/*.raw $(workdir)/ca_ona/data/raw && \
+		rmdir $(datdir)/ca/raw/upc_ca_ona_raw/ && \
+		tar xzf $(datdir)/ca/utts/upc_ca_ona_utts.tgz && \
+		mv $(datdir)/ca/raw/upc_ca_ona_utts/*.utt $(workdir)/ca_ona/data/utts && \
+		rmdir $(datdir)/ca/raw/upc_ca_ona_utts/; \
+	fi; \
+	cd $(workdir)/ca_ona && \
+	./configure --with-fest-search-path=$(toolsdir)/festival/examples \
+		    --with-sptk-search-path=$(toolsdir)/bin \
+	            --with-hts-search-path=$(toolsdir)/bin  \
+	            --with-hts-engine-search-path=$(toolsdir)/bin && \
+	$(MAKE) data && \
+	$(MAKE) voice
