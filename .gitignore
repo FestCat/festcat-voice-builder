@@ -18,3 +18,5 @@ configure.scan
 data/en/template
 *.utt
 data/*/template
+data/*/utts
+data/*/raw
