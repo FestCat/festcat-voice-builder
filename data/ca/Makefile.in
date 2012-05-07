@@ -5,51 +5,187 @@ toolsdir = @PWD@/tools
 
 WGET = @WGET@
 
+SPKNAMES = bet eli eva jan mar ona pau pep pol teo # falta uri
+FULLSPKNAMES = $(addprefix upc_ca_,$(SPKNAMES)) 
+
 # upc_ca_base: # config: downl, extract and mv to festival/lib !! languages.scm conflict
-upc_ca_base_File =
-upc_ca_base_MD5 = 
-upc_ca_base_URL = 
+upc_ca_base_File = upc_ca_base.tgz
+upc_ca_base_MD5 = 137b9ac940c0680e783530670379998f
+upc_ca_base_URL = http://www.talp.cat/festcat/src/upc_ca_base-1.0.5.tgz
 
 # ca_hts_template: # config: extract and mv
 ca_hts_template_File = ca_hts_template.tgz
 ca_hts_template_MD5 = b026974396bcae094c978b0f3f7cc0b1
 
-
-# HTS demo:
+# upc_ca_bet:
 # =========
 # -- Download parameters --
-HTSDemo_File = HTS-demo_CMU-ARCTIC-SLT.tar.bz2
-HTSDemo_MD5  = 162e3705d134f0cd575fe2b938187cae
-HTSDemo_URL  = http://hts.sp.nitech.ac.jp/archives/2.2/HTS-demo_CMU-ARCTIC-SLT.tar.bz2
+upc_ca_bet_raw_File = upc_ca_bet/upc_ca_bet_raw48.tar.bz2
+upc_ca_bet_raw_URL  = http://www.talp.cat/festcat/src/upc_ca_bet_raw48.tar.bz2
+upc_ca_bet_utt_File = upc_ca_bet/upc_ca_bet_utts.tgz
+upc_ca_bet_utt_URL  = http://www.talp.cat/festcat/src/upc_ca_bet_utts.tgz
+upc_ca_bet_raw_MD5  = b7315612a46d994054ab6f8d897a227f
+upc_ca_bet_utt_MD5  = f34998273ef110f8dad68ef49738def3
+
+# upc_ca_eli:
+# =========
+# -- Download parameters --
+upc_ca_eli_raw_File = upc_ca_eli/upc_ca_eli_raw48.tar.bz2
+upc_ca_eli_raw_MD5  = 4d8bdf2af9e84657c391c679da9028a3
+upc_ca_eli_raw_URL  = http://www.talp.cat/festcat/src/upc_ca_eli_raw48.tar.bz2
+upc_ca_eli_utt_File = upc_ca_eli/upc_ca_eli_utts.tgz
+upc_ca_eli_utt_MD5  = 723e9cb2217c82fae24d96b1928cb572
+upc_ca_eli_utt_URL  = http://www.talp.cat/festcat/src/upc_ca_eli_utts.tgz
+
+# upc_ca_eva:
+# =========
+# -- Download parameters --
+upc_ca_eva_raw_File = upc_ca_eva/upc_ca_eva_raw48.tar.bz2
+upc_ca_eva_raw_MD5  = 7ae64586a03c04d45de1607f5608b65b
+upc_ca_eva_raw_URL  = http://www.talp.cat/festcat/src/upc_ca_eva_raw48.tar.bz2
+upc_ca_eva_utt_File = upc_ca_eva/upc_ca_eva_utts.tgz
+upc_ca_eva_utt_MD5  = c32d565af8d26ef68b89ab75315a9ba8
+upc_ca_eva_utt_URL  = http://www.talp.cat/festcat/src/upc_ca_eva_utts.tgz
+
+# upc_ca_jan:
+# =========
+# -- Download parameters --
+upc_ca_jan_raw_File = upc_ca_jan/upc_ca_jan_raw48.tar.bz2
+upc_ca_jan_raw_MD5  = 395b20f443c195c744c21b811f80859a
+upc_ca_jan_raw_URL  = http://www.talp.cat/festcat/src/upc_ca_jan_raw48.tar.bz2
+upc_ca_jan_utt_File = upc_ca_jan/upc_ca_jan_utts.tgz
+upc_ca_jan_utt_MD5  = 4f1fd39bf290dcef1bd36c9e6a57c0aa
+upc_ca_jan_utt_URL  = http://www.talp.cat/festcat/src/upc_ca_jan_utts.tgz
+
+# upc_ca_mar:
+# =========
+# -- Download parameters --
+upc_ca_mar_raw_File = upc_ca_mar/upc_ca_mar_raw48.tar.bz2
+upc_ca_mar_raw_MD5  = 0c84014d9d96ebbc0d2816c85a7ff596
+upc_ca_mar_raw_URL  = http://www.talp.cat/festcat/src/upc_ca_mar_raw48.tar.bz2
+upc_ca_mar_utt_File = upc_ca_mar/upc_ca_mar_utts.tgz
+upc_ca_mar_utt_MD5  = 21a78fa3f9814301d4f0c3e50803743b
+upc_ca_mar_utt_URL  = http://www.talp.cat/festcat/src/upc_ca_mar_utts.tgz
+
+# upc_ca_ona:
+# =========
+# -- Download parameters --
+upc_ca_ona_raw_File = upc_ca_ona/upc_ca_ona_raw48.tar.bz2
+upc_ca_ona_raw_MD5  = b1f8a4153f29710843c17dde230379bc
+upc_ca_ona_raw_URL  = http://www.talp.cat/festcat/src/upc_ca_ona_raw48.tar.bz2
+upc_ca_ona_utt_File = upc_ca_ona/upc_ca_ona_utts.tgz
+upc_ca_ona_utt_MD5  = d25ce1539990d9a48df5561950d21a94
+upc_ca_ona_utt_URL  = http://www.talp.cat/festcat/src/upc_ca_ona_utts.tgz
+
+# upc_ca_pau:
+# =========
+# -- Download parameters --
+upc_ca_pau_raw_File = upc_ca_pau/upc_ca_pau_raw48.tar.bz2
+upc_ca_pau_raw_MD5  = e69dfd0fd59f062453a3625dd9b5b714
+upc_ca_pau_raw_URL  = http://www.talp.cat/festcat/src/upc_ca_pau_raw48.tar.bz2
+upc_ca_pau_utt_File = upc_ca_pau/upc_ca_pau_utts.tgz
+upc_ca_pau_utt_MD5  = eb8dccebabc7816b8cd54d447eb072f5
+upc_ca_pau_utt_URL  = http://www.talp.cat/festcat/src/upc_ca_pau_utts.tgz
+
+# upc_ca_pep:
+# =========
+# -- Download parameters --
+upc_ca_pep_raw_File = upc_ca_pep/upc_ca_pep_raw48.tar.bz2
+upc_ca_pep_raw_MD5  = de346afab7b5f9cdfa54d8df309def17
+upc_ca_pep_raw_URL  = http://www.talp.cat/festcat/src/upc_ca_pep_raw48.tar.bz2
+upc_ca_pep_utt_File = upc_ca_pep/upc_ca_pep_utts.tgz
+upc_ca_pep_utt_MD5  = 1c8792c298dbb3d09e7981a3bd23804a
+upc_ca_pep_utt_URL  = http://www.talp.cat/festcat/src/upc_ca_pep_utts.tgz
+
+# upc_ca_pol:
+# =========
+# -- Download parameters --
+upc_ca_pol_raw_File = upc_ca_pol/upc_ca_pol_raw48.tar.bz2
+upc_ca_pol_raw_MD5  = 7cb7c0531cf12544b5a2615a21a2edff
+upc_ca_pol_raw_URL  = http://www.talp.cat/festcat/src/upc_ca_pol_raw48.tar.bz2
+upc_ca_pol_utt_File = upc_ca_pol/upc_ca_pol_utts.tgz
+upc_ca_pol_utt_MD5  = 4a9b57894e504f6c1a3e80ae93709091
+upc_ca_pol_utt_URL  = http://www.talp.cat/festcat/src/upc_ca_pol_utts.tgz
+
+# upc_ca_teo:
+# =========
+# -- Download parameters --
+upc_ca_teo_raw_File = upc_ca_teo/upc_ca_teo_raw48.tar.bz2
+upc_ca_teo_raw_MD5  = fbe0e7fcc88be87333f4439cea15fda8
+upc_ca_teo_raw_URL  = http://www.talp.cat/festcat/src/upc_ca_teo_raw48.tar.bz2
+upc_ca_teo_utt_File = upc_ca_teo/upc_ca_teo_utts.tgz
+upc_ca_teo_utt_MD5  = ed4303c86aa5517ddb5254418a08c931
+upc_ca_teo_utt_URL  = http://www.talp.cat/festcat/src/upc_ca_teo_utts.tgz
+
+# upc_ca_uri:
+# =========
+# -- Download parameters --
+upc_ca_uri_raw_File = upc_ca_uri/upc_ca_uri_raw48.tar.bz2
+upc_ca_uri_raw_MD5  = 
+upc_ca_uri_raw_URL  = http://www.talp.cat/festcat/src/upc_ca_uri_raw48.tar.bz2
+upc_ca_uri_utt_File = upc_ca_uri/upc_ca_uri_utts.tgz
+upc_ca_uri_utt_MD5  = 
+upc_ca_uri_utt_URL  = http://www.talp.cat/festcat/src/upc_ca_uri_utts.tgz
 
 
-ALLDOWNLOADS = HTSDemo
+ALLDOWNLOADS = $(addsuffix _raw,$(FULLSPKNAMES)) $(addsuffix _utt,$(FULLSPKNAMES))
 ALLCONFIGURES = HTSDemo
-download_all = $(addprefix download_,$(ALLDOWNLOADS)) 
+download_all = $(addprefix download_,$(ALLDOWNLOADS)) download_upc_ca_base
 configure_all = $(addprefix configure_,$(ALLCONFIGURES)) 
 
-all: lang_en
+download_all_utt = $(addsuffix _utt,$(addprefix idown_,$(FULLSPKNAMES)))
+download_all_raw = $(addsuffix _raw,$(addprefix idown_,$(FULLSPKNAMES)))
+
+all2: $(download_all_utt)
+
+all: lang_ca
 
 lang_en: $(download_all) $(configure_all)
 
 # This target will check if the downloads are correct. If they are not
 # it will download them again, using a password if needed.
-$(download_all):
+download: $(download_all)
+
+
+upc_ca_base: download_upc_ca_base
+	echo "TODO: Configure upc_ca_base"
+
+upc_ca_%: download_upc_ca_% configure_upc_ca_%
+
+download_upc_ca_base:
+	echo $@ && \
+	echo $(subst download_,,$@) && \
+	mkdir -p $(subst download_,,$@)  && \
 	echo "$($(subst download_,,$@)_MD5)  $($(subst download_,,$@)_File)" | md5sum -c --status && echo "$(subst download_,,$@) already downloaded" || \
 	( rm -f $($(subst download_,,$@)_File) && \
-	$(WGET) --http-user=$($(subst download_,,$@)_USER) --http-password=$($(subst download_,,$@)_PASSWORD) --output-document=$($(subst download_,,$@)_File) $($(subst download_,,$@)_URL) )
+	$(WGET) --output-document=$($(subst download_,,$@)_File) $($(subst download_,,$@)_URL) )
+
+download_%: idown_%_raw idown_%_utt
+
+idown_%_raw:
+	mkdir -p $* && \
+	echo "$($*_raw_MD5)  $($*_raw_File)" | md5sum -c --status && echo "$*_raw already downloaded" || \
+	( rm -f $($*_File) && \
+	$(WGET) --http-user=$($*_USER) --http-password=$($*_PASSWORD) --output-document=$($*_raw_File) $($*_raw_URL) )
+
+idown_%_utt:
+	mkdir -p $* && \
+	echo "$($*_utt_MD5)  $($*_utt_File)" | md5sum -c --status && echo "$*_utt already downloaded" || \
+	( rm -f $($*_utt_File) && \
+	$(WGET) --http-user=$($*_USER) --http-password=$($*_PASSWORD) --output-document=$($*_utt_File) $($*_utt_URL) ) && \
+	md5sum $($*_utt_File);
 
 
-configure_HTSDemo: download_HTSDemo
-	mkdir -p template raw utts wav && \
-	mkdir -p utts/arctic-slt raw/arctic-slt && \
-	if [ ! -f template/configure.ac ] || [ ! -f raw/arctic-slt/cmu_us_arctic_slt_a0001.raw ] ; then \
-		tar xjf $(HTSDemo_File) && \
-		mv HTS-demo_CMU-ARCTIC-SLT/data/raw/*.raw raw/arctic-slt  && \
-		mv HTS-demo_CMU-ARCTIC-SLT/data/utts/*.utt utts/arctic-slt  && \
-		mv HTS-demo_CMU-ARCTIC-SLT/* template && \
-		rm -rf HTS-demo_CMU-ARCTIC-SLT; \
-	fi
-
+configure_%: download_%
+	echo "To do $@"
+#	mkdir -p template raw utts wav && \
+#	mkdir -p utts/arctic-slt raw/arctic-slt && \
+#	if [ ! -f template/configure.ac ] || [ ! -f raw/arctic-slt/cmu_us_arctic_slt_a0001.raw ] ; then \
+#		tar xjf $(HTSDemo_File) && \
+#		mv HTS-demo_CMU-ARCTIC-SLT/data/raw/*.raw raw/arctic-slt  && \
+#		mv HTS-demo_CMU-ARCTIC-SLT/data/utts/*.utt utts/arctic-slt  && \
+#		mv HTS-demo_CMU-ARCTIC-SLT/* template && \
+#		rm -rf HTS-demo_CMU-ARCTIC-SLT; \
+#	fi
 
 

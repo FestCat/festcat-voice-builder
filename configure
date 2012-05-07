@@ -3234,7 +3234,7 @@ fi
 WORKDIR=$PWD/work
 
 
-ac_config_files="$ac_config_files Makefile deps/Makefile data/en/Makefile"
+ac_config_files="$ac_config_files Makefile deps/Makefile data/en/Makefile data/ca/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -3937,6 +3937,7 @@ do
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "deps/Makefile") CONFIG_FILES="$CONFIG_FILES deps/Makefile" ;;
     "data/en/Makefile") CONFIG_FILES="$CONFIG_FILES data/en/Makefile" ;;
+    "data/ca/Makefile") CONFIG_FILES="$CONFIG_FILES data/ca/Makefile" ;;
 
   *) as_fn_error "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac
