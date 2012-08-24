@@ -31,7 +31,7 @@ lang_%: dependencies
 empty:=
 space:= $(empty) $(empty)
 
-%.spk: 
+%.spk: dependencies
 	echo $(word 1,$(subst _,$(space),$@))
 	cd $(datdir)/$(word 1,$(subst _,$(space),$@)) && \
 	$(MAKE) $@
