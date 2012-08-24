@@ -7,13 +7,15 @@ configure.scan
 data/*/raw
 data/*/template
 data/*/utts
+deps/*.tar.gz
+deps/*.tar.bz2
 deps/HDecode*.tar.gz
 deps/HTK-*.tar.gz
 deps/hts/
 deps/HTS-demo_CMU-ARCTIC-SLT/
-deps/hts_engine_API-1.05/
+deps/hts_engine_API-*/
 deps/htspatch/
-deps/SPTK-3.4.1/
+deps/SPTK-*/
 install
 *Makefile
 *.raw
@@ -21,3 +23,7 @@ tools
 *.utt
 work
 
+data/ca/ca_*
+data/ca/md5sum.txt
+data/ca/upc_ca_base
+data/ca/upc_ca_base*

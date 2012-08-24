@@ -1,84 +1,97 @@
 #!/usr/bin/make
 # @configure_input@
 
+depsdir = @PWD@/deps
 toolsdir = @PWD@/tools
+workdir = @WORKDIR@
+datdir = @PWD@/data
 
 WGET = @WGET@
 
 SPKNAMES = bet eli eva jan mar ona pau pep pol teo uri
-FULLSPKNAMES = $(addprefix upc_ca_,$(SPKNAMES)) 
 
-# upc_ca_base: # config: downl, extract and mv to festival/lib !! languages.scm conflict
+# upc_ca_base:
 upc_ca_base_File = upc_ca_base.tgz
-upc_ca_base_MD5 = 137b9ac940c0680e783530670379998f
-upc_ca_base_URL = http://www.talp.cat/festcat/src/upc_ca_base-1.0.5.tgz
+upc_ca_base_MD5 = 765cc8bd8c57bdd0f4d2ad6d160c0eba
+upc_ca_base_URL = http://www.talp.upc.edu/festcat/download/upc_ca_base-2.0.tgz
 
 # ca_hts_template: # config: extract and mv
 ca_hts_template_File = ca_hts_template.tgz
 ca_hts_template_MD5 = b026974396bcae094c978b0f3f7cc0b1
 ca_hts_template_URL = http://www.talp.cat/festcat/src/ca_hts_template.tgz
 
-ALLDOWNLOADS = $(addsuffix _raw,$(FULLSPKNAMES)) $(addsuffix _utt,$(FULLSPKNAMES))
-ALLCONFIGURES = HTSDemo
-download_all = $(addprefix download_,$(ALLDOWNLOADS)) download_upc_ca_base
-configure_all = $(addprefix configure_,$(ALLCONFIGURES)) 
 
-download_all_utt = $(addsuffix _utt,$(addprefix idown_,$(FULLSPKNAMES)))
-download_all_raw = $(addsuffix _raw,$(addprefix idown_,$(FULLSPKNAMES)))
+.PHONY: all lang_ca ca_ona upc_ca_base ca_hts_template %.spk
 
-all2: $(download_all_utt)
+all: lang_ca ca_ona
 
-all: lang_ca
 
-lang_en: $(download_all) $(configure_all)
-
-# This target will check if the downloads are correct. If they are not
-# it will download them again, using a password if needed.
-download: $(download_all)
-
+lang_ca: upc_ca_base ca_hts_template
 
 upc_ca_base: download_upc_ca_base
-	echo "TODO: Configure upc_ca_base"
+	tar xzf $(upc_ca_base_File)
+	cd upc_ca_base-2.0 && \
+	./configure --enable-festivalpath=$(toolsdir)/festival/bin && \
+	$(MAKE) install
 
-upc_ca_%: download_upc_ca_% configure_upc_ca_%
+ca_hts_template: download_ca_hts_template
+	tar xzf $(ca_hts_template_File)
+	rm -rf template
+	mv ca_hts_template template
 
-download_upc_ca_base:
+download_upc_ca_base download_ca_hts_template:
 	echo $@ && \
 	echo $(subst download_,,$@) && \
-	mkdir -p $(subst download_,,$@)  && \
 	echo "$($(subst download_,,$@)_MD5)  $($(subst download_,,$@)_File)" | md5sum -c --status && echo "$(subst download_,,$@) already downloaded" || \
 	( rm -f $($(subst download_,,$@)_File) && \
 	$(WGET) --output-document=$($(subst download_,,$@)_File) $($(subst download_,,$@)_URL) )
 
-download_%: idown_%_raw idown_%_utt
+%.spk: %.download lang_ca
+	if test ! -f $(workdir)/$*/configure.ac  -o  ! -d $(workdir)/$*/data/utts/  -o   ! -f $(workdir)/$*/data/utts/*.utt  ; then \
+		rm -rf $(workdir)/$* && \
+		mkdir -p $(workdir)/$* && \
+		cp -r $(datdir)/ca/template/* $(workdir)/$*/ && \
+		mkdir -p $(workdir)/$*/data/raw $(workdir)/$*/data/utts && \
+		if test  ! -d $(datdir)/ca/$*/upc_$*_raw48/   -o   ! -f $(datdir)/ca/$*/upc_$*_raw48/*.raw  ; then \
+			tar xjf $(datdir)/ca/$*/upc_$*_raw48.tar.bz2 -C $(datdir)/ca/$*; \
+		fi && \
+		mv $(datdir)/ca/$*/upc_$*_raw48/*.raw $(workdir)/$*/data/raw && \
+		rmdir $(datdir)/ca/$*/upc_$*_raw48/ && \
+		tar xzf $(datdir)/ca/$*/upc_$*_utts.tgz -C $(datdir)/ca/$*  && \
+		mv $(datdir)/ca/$*/upc_$*_utts/*.utt $(workdir)/$*/data/utts && \
+		rmdir $(datdir)/ca/$*/upc_$*_utts/; \
+	fi; \
+	cd $(workdir)/$* && \
+	. $(datdir)/ca/speakerprop.sh $(subst ca_,,$*) && \
+	./configure --with-fest-search-path=$(toolsdir)/festival/examples \
+		    --with-sptk-search-path=$(toolsdir)/bin \
+	            --with-hts-search-path=$(toolsdir)/bin  \
+	            --with-hts-engine-search-path=$(toolsdir)/bin \
+	            SPEAKER=$(subst ca_,,$*) && \
+	$(MAKE) data && \
+	$(MAKE) voice
 
-idown_%_raw: md5sum.txt
-	mkdir -p $* && \
-	cd $* && \
-	grep "$*_raw48.tar.bz2" < ../md5sum.txt | md5sum -c --status && echo "$* (raw) already downloaded" || \
-	( rm -f "$*_raw48.tar.bz2" && \
-	$(WGET) http://www.talp.cat/festcat/src/$*_raw48.tar.bz2 )
 
-idown_%_utt: md5sum.txt
-	mkdir -p $* && \
-	cd $* && \
-	grep "$*_utts.tgz" < ../md5sum.txt | md5sum -c --status && echo "$* (utts) already downloaded" || \
-	( rm -f "$*_utts.tgz" && \
-	$(WGET) http://www.talp.cat/festcat/src/$*_utts.tgz )
+%.download: %.downutt %.downraw
+	echo "Regla"
+
+%.downutt: md5sum.txt
+	mkdir -p "$*" && \
+	cd "$*" && \
+	grep "upc_$*_utts.tgz" < ../md5sum.txt | md5sum -c --status && echo "$* (utts) already downloaded" || \
+	( rm -f "upc_$*_utts.tgz" && \
+	$(WGET) http://www.talp.cat/festcat/src/upc_$*_utts.tgz )
+
+
+%.downraw: md5sum.txt
+	mkdir -p "$*" && \
+	cd "$*" && \
+	grep "upc_$*_raw48.tar.bz2" < ../md5sum.txt | md5sum -c --status && echo "$* (raw) already downloaded" || \
+	( rm -f "upc_$*_raw48.tar.bz2" && \
+	$(WGET) http://www.talp.cat/festcat/src/upc_$*_raw48.tar.bz2 )
+
 
 md5sum.txt:
 	$(WGET) http://www.talp.cat/festcat/src/md5sum.txt || exit 1
-
-configure_%: download_%
-	echo "To do $@"
-#	mkdir -p template raw utts wav && \
-#	mkdir -p utts/arctic-slt raw/arctic-slt && \
-#	if [ ! -f template/configure.ac ] || [ ! -f raw/arctic-slt/cmu_us_arctic_slt_a0001.raw ] ; then \
-#		tar xjf $(HTSDemo_File) && \
-#		mv HTS-demo_CMU-ARCTIC-SLT/data/raw/*.raw raw/arctic-slt  && \
-#		mv HTS-demo_CMU-ARCTIC-SLT/data/utts/*.utt utts/arctic-slt  && \
-#		mv HTS-demo_CMU-ARCTIC-SLT/* template && \
-#		rm -rf HTS-demo_CMU-ARCTIC-SLT; \
-#	fi
 
 

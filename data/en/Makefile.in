@@ -2,6 +2,7 @@
 # @configure_input@
 
 toolsdir = @PWD@/tools
+workdir = @WORKDIR@
 
 WGET = @WGET@
 
@@ -43,4 +44,19 @@ configure_HTSDemo: download_HTSDemo
 	fi
 
 
-
+lang_en_slt: lang_en
+	if [ ! -f $(workdir)/en_slt/configure.ac ] || [ ! -f $(workdir)/en_slt/data/utts/cmu_us_arctic_slt_a0001.utt ]; then \
+		rm -rf $(workdir)/en_slt && \
+		mkdir -p $(workdir)/en_slt && \
+		cp -r $(datdir)/en/template/* $(workdir)/en_slt/ && \
+		mkdir -p $(workdir)/en_slt/data/raw $(workdir)/en_slt/data/utts && \
+		cp $(datdir)/en/raw/arctic-slt/*.raw $(workdir)/en_slt/data/raw && \
+		cp $(datdir)/en/utts/arctic-slt/*.utt $(workdir)/en_slt/data/utts; \
+	fi; \
+	cd $(workdir)/en_slt && \
+	./configure --with-fest-search-path=$(toolsdir)/festival/examples \
+		    --with-sptk-search-path=$(toolsdir)/bin \
+	            --with-hts-search-path=$(toolsdir)/bin  \
+	            --with-hts-engine-search-path=$(toolsdir)/bin && \
+	$(MAKE) data && \
+	$(MAKE) voice
