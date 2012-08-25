@@ -15,6 +15,7 @@ fi
 AC_SUBST(WGET)
 
 #library checks
+
 #header file checks
 #type checks
 AC_TYPE_SIZE_T

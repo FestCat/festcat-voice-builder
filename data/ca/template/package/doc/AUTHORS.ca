@@ -1,0 +1,47 @@
+  FestCat ha estat inicialment desenvolupat per gent del Centre de Recerca
+  TALP a la Universitat Politècnica de Catalunya (http://www.talp.cat). 
+  
+  FestCat està basat en vàries eines i recursos desenvolupats o escrits
+  per altres grups i autors. Considereu de llegir el fitxer THANKS.ca per 
+  més informació.
+
+  Els principals autors de FestCat són: 
+  
+   * Personal del TALP:
+   Antonio Bonafonte:  Supervisor del projecte i ... molta feina.
+
+   Ignasi Esquerra:    Disseny de corpus, i gestió de gravacions
+   Asunción Moreno:    Disseny de corpus i producció
+
+   * Estudiants de doctorat:
+   Jordi Adell:        Segmentació de veu, definició de l'anotació del corpus
+   Javier Pérez Mayos: Primera i darrera versió de LTS, regles fonotàctiques 
+
+   * Estudiants de Màster
+   Francesc Jarque:    Primera (i gairebé final) versió de la normalització
+                       de text, LTS i etiquetador. I una exceŀlent memòria 
+                       de Projecte Fi de Carrera que ho documenta.  
+   Silvia Gallego:     Disseny i producció de un text de 10 hores. Recollida
+                       de milions de paraules en diferents dominis.
+
+   * Estudiants de grau
+   Oriol Vinyals:      Aprendre i ensenyar-nos com estimar veus hts i clunit en 
+                       català.
+   Mireia Aguilera, Daniel Coromines, Josep Font:
+                       Supervisió de les sessions de gravació  
+
+   * Lingüista Expert de Verbio (www.verbio.com)
+   Huc Castell:        Criteris fonètics i avaluació de locutors
+                       Supervisió d'etiquetatge fonètic i prosòdic 
+
+   * Locutors professionals:
+   4m+5f (confidential), seleccionats per la companyia LoopAudio
+   1 locutor infantil
+   
+   * Sergio Oller:     Construcció de les veus, empaquetament i distribució,
+                       supervisió de les sessions de gravació.
+                       Correcció d'errors, suport a l'usuari 2009-2012.
+                       Neteja dels scripts.
+
+   * Paco Rivière:     Proves intensives. Scripts, tutorials i
+                       documentació https://wiki.ubuntu.com/CatalanTeam/Tutorials/S%C3%ADntesiDeVeu

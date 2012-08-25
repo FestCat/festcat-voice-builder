@@ -16,8 +16,9 @@ depsdir = @PWD@/deps
 toolsdir = @PWD@/tools
 workdir = @WORKDIR@
 datdir = @PWD@/data
+resultsdir = @PWD@/results
 
-$(toolsdir) $(workdir):
+$(resultsdir) $(toolsdir) $(workdir):
 	mkdir -p "$@"
 
 dependencies: $(toolsdir)

@@ -1,0 +1,47 @@
+  FestCat has originally been written by people in TALP Research 
+  Center at Universitat Politècnica de Catalunya (http://www.talp.cat)
+  
+  FestCat is based on many tools and resources developed or written 
+  by third parties. Please consider reading the THANKS file for further
+  attribution.
+ 
+  Here are listed the main contributors to FestCat:
+  
+   * TALP Staff
+   Antonio Bonafonte:  Supervisor of the project and... a lot of work.
+
+   Ignasi Esquerra:    Corpus design, recording management
+   Asunción Moreno:    Corpus design and production
+
+   * PhD students
+   Jordi Adell:        Voice segmentation, definition of corpus anotation
+   Javier Pérez Mayos: First and last versions of LTS, phonotactic rules 
+
+   * Master students
+   Francesc Jarque:    First (and almost final) version of the tokenizer,
+                       LTS and tagger. And an excellent master thesis 
+                       report that documents it.
+   Silvia Gallego:     Design and production of 10-hour text. Collection
+                       of millions of words in different domains.
+
+   * Undergraduate students
+   Oriol Vinyals:      Learning and teaching us how to estimate hts 
+                       and clunit voices in Catalan.
+   Mireia Aguilera, Daniel Coromines, Josep Font:
+                       Supervision of recording sessions   
+
+   * Linguist Expert from Verbio
+   Huc Castell (www.verbio.com)
+	               Phonetic criteria and evaluation of speakers
+                       Supervision of phonetic and prosodic labeling
+
+   * Speakers talents:
+   4m+5f (confidential), selected by the company LoopAudio
+
+   * Sergio Oller:     Voice building, packaging and distribution,
+                       supervision of recording sessions.
+                       Bug fixing, user support 2009-2012.
+                       Script cleaning.
+
+   * Paco Rivière:     Intensive testing. Scripts, tutorials and
+                       documentation https://wiki.ubuntu.com/CatalanTeam/Tutorials/S%C3%ADntesiDeVeu
