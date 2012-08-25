@@ -55,7 +55,7 @@ package:
 	rm -rf "@DATASET@_@SPEAKER@_hts"
 	cp -r package "@DATASET@_@SPEAKER@_hts"
 	cp voices/qst@QNUM@/ver@VER@/* "@DATASET@_@SPEAKER@_hts/hts"
-	tar czf "@DATASET@_@SPEAKER@_hts.tgz" 
+	tar czf "@DATASET@_@SPEAKER@_hts.tgz" "@DATASET@_@SPEAKER@_hts"
 	echo "Package available: \"@DATASET@_@SPEAKER@_hts.tgz\""
 
 clean: clean-data clean-voice
@@ -74,4 +74,4 @@ distclean: clean
 	rm -f config.status
 	rm -rf autom4te.cache
 
-.PHONY: data voice clean distclean
+.PHONY: data voice package clean distclean
