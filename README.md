@@ -63,9 +63,10 @@ Training Catalan voices may take several days, some GB of Hard disk and a lot of
 so bear in mind that "One does not simply... build an HTS voice".
 
 In order to train the Catalan HTS voices, run:
-        ./configure htk_user="yourhtkuser" htk_password="yourhtkpassword"
-        make ca_ona.spk
-        make ca_bet.spk
-        make ca_pau.spk
+
+    ./configure htk_user="yourhtkuser" htk_password="yourhtkpassword"
+    make ca_ona.spk
+    make ca_bet.spk
+    make ca_pau.spk
 
 
