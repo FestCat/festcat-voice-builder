@@ -131,11 +131,11 @@ Reset global variables back to previous voice."
        (list "-ef"  (path-append hts_data_dir "tree-gv-lf0.inf"))
 
        (list "-k"  (path-append hts_data_dir "gv-switch.inf"))
-       '("-s"    16000.0)
-       '("-p"    80.0)
-       '("-a"    0.420000)
+       '("-s"    48000.0)
+       '("-p"    240.0)
+       '("-a"    0.550000)
        '("-g"    0.0)
-       '("-b"    0.0)
+       '("-b"    0.4)
        '("-u"    0.5)
        ))
 

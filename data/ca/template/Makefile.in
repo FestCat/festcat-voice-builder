@@ -51,7 +51,7 @@ voice:
 	echo "Running a training/synthesis perl script (Training.pl)"
 	@PERL@ scripts/Training.pl scripts/Config.pm 2>&1 | tee -a log
 
-package:
+@DATASET@_@SPEAKER@_hts.tgz:
 	rm -rf "@DATASET@_@SPEAKER@_hts"
 	cp -r package "@DATASET@_@SPEAKER@_hts"
 	cp voices/qst@QNUM@/ver@VER@/* "@DATASET@_@SPEAKER@_hts/hts"
@@ -74,4 +74,4 @@ distclean: clean
 	rm -f config.status
 	rm -rf autom4te.cache
 
-.PHONY: data voice package clean distclean
+.PHONY: data voice clean distclean
