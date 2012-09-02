@@ -42,6 +42,9 @@ download_upc_ca_base:
 		rm -rf $(workdir)/$* && \
 		mkdir -p $(workdir)/$* && \
 		cp -r $(datdir)/ca/template/* $(workdir)/$*/ && \
+		mv $(workdir)/$*/package/configure.in $(workdir)/$*/package/configure.in.tmp && \
+		sed s/!VOICENAME!/upc_$*_hts/g < $(workdir)/$*/package/configure.in.tmp > $(workdir)/$*/package/configure.in && \
+		rm $(workdir)/$*/package/configure.in.tmp && \
 		sed s/SPEAKER/$(subst ca_,,$*)/g < $(workdir)/$*/package/festvox/upc_ca_SPEAKER_hts.scm > $(workdir)/$*/package/festvox/upc_ca_$(subst ca_,,$*)_hts.scm && \
 		rm $(workdir)/$*/package/festvox/upc_ca_SPEAKER_hts.scm && \
 		mkdir -p $(workdir)/$*/data/raw $(workdir)/$*/data/utts && \
@@ -63,13 +66,14 @@ download_upc_ca_base:
 	            SPEAKER=$(subst ca_,,$*) && \
 	$(MAKE) data && \
 	$(MAKE) voice && \
+	(cd $(workdir)/$*/upc_$*_hts && autoconf) && \
 	$(MAKE) upc_$*_hts.tgz && \
 	mkdir -p $(resultsdir) && \
 	cp $(workdir)/$*/upc_$*_hts.tgz $(resultsdir)
 
 
 %.download: %.downutt %.downraw
-	echo "Regla"
+	echo ""
 
 %.downutt: md5sum.txt
 	mkdir -p "$*" && \
