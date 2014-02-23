@@ -1,9 +1,7 @@
-(if (boundp 'datadir)
-(set! load-path (cons (path-append datadir "upc_catalan/") 
-                      load-path))
-(set! load-path (cons (path-append libdir "upc_catalan/") 
-                      load-path))
-)
-(require 'upc_catalan_phones)
-(Param.set 'PhoneSet 'upc_catalan)
-(PhoneSet.select 'upc_catalan)
+(set! catalan-path (path-append (if (boundp 'datadir) datadir libdir) "upc_catalan/"))
+(if (not (member_string catalan-path load-path))
+                      (set! load-path (cons catalan-path load-path)))
+
+(require 'upc_ca_generic_phoneset)
+(upc_ca_generic::select_phoneset)
+

@@ -63,7 +63,7 @@
      (error)))
 
 ;;;  Add the directory that contains catalan stuff (normalization, tagger, etc.) to load-path
-(set! catalan-path (path-append datadir "upc_catalan/"))
+(set! catalan-path (path-append (if (boundp 'datadir) datadir libdir) "upc_catalan/"))
 (if (not (member_string catalan-path load-path))
                       (set! load-path (cons catalan-path load-path)))
 
@@ -111,7 +111,7 @@ Reset global variables back to previous voice."
 
 (set! upc_ca_SPEAKER_hts::hts_engine_params
       (list
-       (list "-m" (path-append hts_data_dir "htsvoice"))
+       (list "-m" (path-append hts_data_dir "upc_ca_SPEAKER.htsvoice"))
        )
 )
 
@@ -120,6 +120,8 @@ Reset global variables back to previous voice."
 Define voice for catalan."
   ;; *always* required
   (voice_reset)
+
+  (Param.set 'Language 'catalan)
 
   ;; Select appropriate phone set
   (upc_ca_generic::select_phoneset)

@@ -19,6 +19,7 @@ Some dependencies are not installed automatically:
    - grep, awk, sed
    - sox
    - perl
+   - csh
 
 2. I also needed the Debian package `libx11-dev` to build HTS. Sorry for not providing more details.
 
@@ -29,10 +30,10 @@ compiled and installed automatically to the `tools` directory.
 
 1. [Speech Tools 2.1-release](http://www.cstr.ed.ac.uk/projects/festival/download.html)
 2. [Festival 2.1-release](http://www.cstr.ed.ac.uk/projects/festival/download.html)
-3. [SPTK 3.4.1](http://sourceforge.net/projects/sp-tk)
-4. [HTS-2.2](http://hts.sp.nitech.ac.jp/) for [HTK-3.4.1](http://htk.eng.cam.ac.uk/) (downloading HTK requires a [user and password](http://htk.eng.cam.ac.uk/register.shtml), as well as agreeing to the [non-free license](http://htk.eng.cam.ac.uk/docs/license.shtml))
+3. [SPTK 3.6](http://sourceforge.net/projects/sp-tk)
+4. [HTS-2.3alpha](http://hts.sp.nitech.ac.jp/) for [HTK-3.4.1](http://htk.eng.cam.ac.uk/) (downloading HTK requires a [user and password](http://htk.eng.cam.ac.uk/register.shtml), as well as agreeing to the [non-free license](http://htk.eng.cam.ac.uk/docs/license.shtml))
 5. [HDecode 3.4.1](http://htk.eng.cam.ac.uk/) (it has similar restrictions to HTK)
-6. [hts_engine 1.0.5](http://sourceforge.net/projects/hts-engine)
+6. [hts_engine 1.08](http://sourceforge.net/projects/hts-engine)
 
 
 ## Language specific tools
