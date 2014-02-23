@@ -16,7 +16,7 @@
 
 
 # AC_INIT (package, version, [bug-report], [tarname], [url])
-AC_INIT([FestCat: Veu !VOICENAME!], [2.0],https://github.com/FestCat/festcat-voice-builder/issues,!VOICENAME!,[http://www.talp.cat/festcat)
+AC_INIT([FestCat: Veu !VOICENAME!], [2.0],https://github.com/FestCat/festcat-voice-builder/issues,!VOICENAME!,[http://www.talp.cat/festcat])
 AC_PREREQ([2.59])
 AC_PROG_SED
 AC_PROG_GREP

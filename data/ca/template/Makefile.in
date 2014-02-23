@@ -55,6 +55,11 @@ voice:
 	rm -rf "@DATASET@_@SPEAKER@_hts"
 	cp -r package "@DATASET@_@SPEAKER@_hts"
 	cp voices/qst@QNUM@/ver@VER@/* "@DATASET@_@SPEAKER@_hts/hts"
+	mv "@DATASET@_@SPEAKER@_hts/configure.in" "@DATASET@_@SPEAKER@_hts/configure.in.tmp"
+	sed s/!VOICENAME!/@DATASET@_@SPEAKER@_hts/g < "@DATASET@_@SPEAKER@_hts/configure.in.tmp"  > \
+	     "@DATASET@_@SPEAKER@_hts/configure.in"
+	rm "@DATASET@_@SPEAKER@_hts/configure.in.tmp"
+	autoconf -i
 	tar czf "@DATASET@_@SPEAKER@_hts.tgz" "@DATASET@_@SPEAKER@_hts"
 	echo "Package available: \"@DATASET@_@SPEAKER@_hts.tgz\""
 
