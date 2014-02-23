@@ -84,4 +84,9 @@ download_upc_ca_base:
 	$(WGET) --output-document=upc_$*_raw.tar.bz2 http://festcat.talp.cat/download/data/upc_$*_raw-1.0.tar.bz2
 
 
+clean:
+	$(RM) -rf upc_ca_base $(upc_ca_base_File)
+	$(RM) -rf $(addprefix ca_,$(SPKNAMES))
 
+distclean: clean
+	$(RM) -rf Makefile

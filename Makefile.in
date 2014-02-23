@@ -39,6 +39,7 @@ space:= $(empty) $(empty)
 
 
 clean:
+	(cd $(datdir)/ca/ && make clean)
 	$(RM) -rf deps/HDecode-3.4.1.tar.gz
 	$(RM) -rf deps/HTK-3.4.1.tar.gz
 	$(RM) -rf deps/HTS-2.2_for_HTK-3.4.1.tar.bz2
@@ -46,9 +47,12 @@ clean:
 	$(RM) -rf deps/festival-*.tar.gz
 	$(RM) -rf deps/hts_engine_API-1.05.tar.gz
 	$(RM) -rf deps/speech_tools-*.tar.gz
-	$(RM) -rf tools
+	$(RM) -rf deps/SPTK-3.4.1 deps/hts deps/hts_engine_API-1.05
+	$(RM) -rf deps/htspatch
+	$(RM) -rf tools work
 
-distclean:
+distclean: clean
+	(cd $(datdir)/ca/ && make distclean)
 	$(RM) -rf Makefile autom4te.cache config.log config.status
 	$(RM) -rf data/ca/Makefile data/en/Makefile deps/Makefile
 
