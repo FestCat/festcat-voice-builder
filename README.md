@@ -28,8 +28,8 @@ Some dependencies are not installed automatically:
 The following software is not language specific and is downloaded to the `deps` directory, 
 compiled and installed automatically to the `tools` directory.
 
-1. [Speech Tools 2.1-release](http://www.cstr.ed.ac.uk/projects/festival/download.html)
-2. [Festival 2.1-release](http://www.cstr.ed.ac.uk/projects/festival/download.html)
+1. [Speech Tools 2.3-current](http://tts.speech.cs.cmu.edu/awb/20131016/)
+2. [Festival 2.3-current](http://tts.speech.cs.cmu.edu/awb/20131016/)
 3. [SPTK 3.6](http://sourceforge.net/projects/sp-tk)
 4. [HTS-2.3alpha](http://hts.sp.nitech.ac.jp/) for [HTK-3.4.1](http://htk.eng.cam.ac.uk/) (downloading HTK requires a [user and password](http://htk.eng.cam.ac.uk/register.shtml), as well as agreeing to the [non-free license](http://htk.eng.cam.ac.uk/docs/license.shtml))
 5. [HDecode 3.4.1](http://htk.eng.cam.ac.uk/) (it has similar restrictions to HTK)
@@ -45,14 +45,12 @@ data/$lang.
 
 This is downloaded automatically:
 
-1. upc_ca_base (also known as festival-ca in some distributions)
-2. raw recordings and utt files.
+ - upc_ca_base (also known as festival-ca in some distributions)
+ - raw recordings and utt files.
 
 ### English
 
-Some more testing should be done maybe.
-
-1. HTS-demo
+ - HTS-demo
 
 # Usage
 
