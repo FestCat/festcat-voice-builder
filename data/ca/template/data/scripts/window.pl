@@ -5,7 +5,7 @@
 #           http://hts.sp.nitech.ac.jp/                             #
 # ----------------------------------------------------------------- #
 #                                                                   #
-#  Copyright (c) 2001-2011  Nagoya Institute of Technology          #
+#  Copyright (c) 2001-2012  Nagoya Institute of Technology          #
 #                           Department of Computer Science          #
 #                                                                   #
 #                2001-2008  Tokyo Institute of Technology           #
@@ -76,6 +76,20 @@ for ( $i = 1 ; $i <= $nwin ; $i++ ) {
    @win  = split( ' ', $data );
    $size = $win[0];                    # size of this window
 
+   # check boundary falgs
+   @chkbound = ();
+   for ( $j = 0 ; $j <= $size ; $j++ ) {
+      $chkbound[$j] = 1;
+   }
+   for ( $j = 1 ; $j <= $size ; $j++ ) {
+      last if ($win[$j] != 0.0);
+      $chkbound[$j] = 0;
+   }
+   for ( $j = $size ; $j >= 1 ; $j-- ) {
+      last if ($win[$j] != 0.0);
+      $chkbound[$j] = 0;
+   }
+
    if ( $size % 2 != 1 ) {
       die "Size of window must be 2*n + 1 and float";
    }
@@ -89,7 +103,7 @@ for ( $i = 1 ; $i <= $nwin ; $i++ ) {
          # check space boundary (ex. voiced/unvoiced boundary)
          $boundary = 0;
          for ( $k = -$nlr ; $k <= $nlr ; $k++ ) {
-            if ( $win[ $k + $nlr + 1 ] != 0.0 ) {
+            if ( $chkbound[ $k + $nlr + 1 ] == 1 ) {
                if ( $t + $k < 0 ) {
                   $l = 0;
                }

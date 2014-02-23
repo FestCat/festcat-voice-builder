@@ -4,7 +4,7 @@
 #           http://hts.sp.nitech.ac.jp/                             #
 # ----------------------------------------------------------------- #
 #                                                                   #
-#  Copyright (c) 2001-2011  Nagoya Institute of Technology          #
+#  Copyright (c) 2001-2012  Nagoya Institute of Technology          #
 #                           Department of Computer Science          #
 #                                                                   #
 #                2001-2008  Tokyo Institute of Technology           #
@@ -46,51 +46,44 @@
 SPEAKER = @SPEAKER@
 DATASET = @DATASET@
 
-# awk, perl, bc and tcl
-AWK   = @AWK@
-PERL  = @PERL@
-BC    = @BC@
-TCLSH = @TCLSH@
-WC    = @WC@
+# awk and perl
+AWK  = @AWK@
+PERL = @PERL@
 
 # SPTK commands
 X2X     = @X2X@
-FRAME   = @FRAME@
-WINDOW  = @WINDOW@
 MGCEP   = @MGCEP@
 LPC2LSP = @LPC2LSP@
-STEP    = @STEP@
 MERGE   = @MERGE@
-VSTAT   = @VSTAT@
-NRAND   = @NRAND@
 SOPR    = @SOPR@
-VOPR    = @VOPR@
 NAN     = @NAN@
 MINMAX  = @MINMAX@
+PITCH   = @PITCH@
+FRAME   = @FRAME@
+WINDOW  = @WINDOW@
 
 # dumpfeats to extract utterance information
 DUMPFEATS = @DUMPFEATS@
 
 # speech analysis conditions
-SAMPFREQ    = @SAMPFREQ@   # Sampling frequency (48kHz)
-FRAMELEN    = @FRAMELEN@   # Frame length in point (1200 = 48000 * 0.025)
-FRAMESHIFT  = @FRAMESHIFT@ # Frame shift in point (240 = 48000 * 0.005)
-WINDOWTYPE  = @WINDOWTYPE@ # Window type -> 0: Blackman 1: Hamming 2: Hanning
-NORMALIZE   = @NORMALIZE@  # Normalization -> 0: none  1: by power  2: by magnitude
-FFTLEN      = @FFTLEN@     # FFT length in point
-FREQWARP    = @FREQWARP@   # frequency warping factor
-GAMMA       = @GAMMA@      # pole/zero weight for mel-generalized cepstral (MGC) analysis
-MGCORDER    = @MGCORDER@   # order of MGC analysis
-LNGAIN      = @LNGAIN@     # use logarithmic gain rather than linear gain
-LOWERF0     = @LOWERF0@    # lower limit for f0 extraction (Hz)
-UPPERF0     = @UPPERF0@    # upper limit for f0 extraction (Hz)
-NOISEMASK   = @NOISEMASK@  # standard deviation of white noise to mask noises in f0 extraction
+SAMPFREQ   = @SAMPFREQ@   # Sampling frequency (48kHz)
+FRAMELEN   = @FRAMELEN@   # Frame length in point (1200 = 48000 * 0.025)
+FRAMESHIFT = @FRAMESHIFT@ # Frame shift in point (240 = 48000 * 0.005)
+WINDOWTYPE = @WINDOWTYPE@ # Window type -> 0: Blackman 1: Hamming 2: Hanning
+NORMALIZE  = @NORMALIZE@  # Normalization -> 0: none  1: by power  2: by magnitude
+FFTLEN     = @FFTLEN@     # FFT length in point
+FREQWARP   = @FREQWARP@   # frequency warping factor
+GAMMA      = @GAMMA@      # pole/zero weight for mel-generalized cepstral (MGC) analysis
+MGCORDER   = @MGCORDER@   # order of MGC analysis
+LNGAIN     = @LNGAIN@     # use logarithmic gain rather than linear gain
+LOWERF0    = @LOWERF0@    # lower limit for f0 extraction (Hz)
+UPPERF0    = @UPPERF0@    # upper limit for f0 extraction (Hz)
 
 # windows for calculating delta features
-MGCWIN      = win/mgc.win
-LF0WIN      = win/lf0.win
-NMGCWIN     = @NMGCWIN@
-NLF0WIN     = @NLF0WIN@
+MGCWIN  = win/mgc.win
+LF0WIN  = win/lf0.win
+NMGCWIN = @NMGCWIN@
+NLF0WIN = @NLF0WIN@
 
 all: analysis labels
 
@@ -102,6 +95,7 @@ mgc:
 	# Extracting MGC or MGC-LSP coefficients from raw audio
 	mkdir -p mgc
 
+	SAMPKHZ=`echo $(SAMPFREQ) | $(X2X) +af | $(SOPR) -m 0.001 | $(X2X) +fa`; \
 	for raw in raw/$(DATASET)_$(SPEAKER)_*.raw; do \
 		base=`basename $${raw} .raw`; \
 		min=`$(X2X) +sf $${raw} | $(MINMAX) | $(X2X) +fa | head -n 1`; \
@@ -115,7 +109,6 @@ mgc:
 				$(MGCEP) -a $(FREQWARP) -m $(MGCORDER) -l $(FFTLEN) -e 1.0E-08 > mgc/$${base}.mgc; \
 			else \
 				echo "Extracting MGC-LSP coefficients from $${raw}"; \
-				SAMPKHZ=`expr $(SAMPFREQ) / 1000`; \
 				if [ $(LNGAIN) -eq 1 ]; then \
 					GAINOPT="-l"; \
 				fi; \
@@ -137,33 +130,20 @@ lf0:
 	# Extracting log f0 sequence from raw audio
 	mkdir -p lf0
 
+	SAMPKHZ=`echo $(SAMPFREQ) | $(X2X) +af | $(SOPR) -m 0.001 | $(X2X) +fa`; \
 	for raw in raw/$(DATASET)_$(SPEAKER)_*.raw; do \
 		base=`basename $${raw} .raw`; \
 		min=`$(X2X) +sf $${raw} | $(MINMAX) | $(X2X) +fa | head -n 1`; \
 		max=`$(X2X) +sf $${raw} | $(MINMAX) | $(X2X) +fa | tail -n 1`; \
 		if [ -s $${raw} -a $${min} -gt -32768 -a $${max} -lt 32767 ]; then \
 			echo "Extracting f0 from $${raw}"; \
-			count=`echo "0.005 * $(SAMPFREQ)" | $(BC) -l`; \
-			$(STEP) -l `printf "%.0f" $${count}` -v 0.0 | \
-			$(X2X) +fs > tmp.head; \
-			count=`echo "0.025 * $(SAMPFREQ)" | $(BC) -l`; \
-			$(STEP) -l `printf "%.0f" $${count}` -v 0.0 | \
-			$(X2X) +fs > tmp.tail; \
-			cat tmp.head $${raw} tmp.tail | \
-			$(X2X) +sf > tmp; \
-			leng=`$(X2X) +fa tmp | $(WC) -l`; \
-			$(NRAND) -l $${leng} | $(SOPR) -m $(NOISEMASK) | $(VOPR) -a tmp | \
-			$(X2X) +fs > tmp.raw; \
-			$(TCLSH) scripts/getf0.tcl -l -lf0 -H $(UPPERF0) -L $(LOWERF0) -p $(FRAMESHIFT) -r $(SAMPFREQ) tmp.raw | \
-			$(X2X) +af > lf0/$${base}.lf0; \
+			$(X2X) +sf $${raw} | $(PITCH) -H $(UPPERF0) -L $(LOWERF0) -p $(FRAMESHIFT) -s $${SAMPKHZ} -o 2 > lf0/$${base}.lf0; \
 			if [ -n "`$(NAN) lf0/$${base}.lf0`" ]; then \
 				echo " Failed to extract log f0 from $${raw}"; \
 				rm -f lf0/$${base}.lf0; \
 			fi; \
 		fi; \
 	done
-
-	rm -f tmp tmp.head tmp.tail tmp.raw
 
 cmp: 
 	# Composing training data files from mgc and lf0 files

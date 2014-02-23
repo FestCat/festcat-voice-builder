@@ -5,7 +5,7 @@ cmp: Training data in HTK data format (natural endian).
 
 labels: Context-independent and -dependent labels in HTK label format (ascii).
 
-lf0: Log fundamental frequency values extracted by getf0.tcl (4-byte float, natural endian).
+lf0: Log fundamental frequency values extracted by SPTK (4-byte float, natural endian).
 
 lists: Context-independent and -dependent model lists (ascii).
 
@@ -27,6 +27,6 @@ win: windows coefficients to calculate dynamic features (ascii).
 Acknowledgment
 
 This demonstration uses a part of the CMU ARCTIC database.
-Audio files are up-sampled by using speech tools and SPTK commands: ch_wave -c 0 -F 32000 -otype raw in.wav | x2x +sf | interpolate -p 2 -d | ds -s 43 | x2x +fs > out.raw
+Audio files are up-sampled by using speech tools and SPTK commands: ch_wave -c 0 -F 32000 -otype raw in.wav | x2x +sf | interpolate -p 2 -d | ds -s 43 | sopr -m 0.69 | x2x +fs > out.raw
 See COPYING for copyright of this database.
 If you want to know its detail, please visit <http://festvox.org/cmu_arctic/index.html>.

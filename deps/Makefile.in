@@ -22,23 +22,23 @@ SpeechTools_URL = https://github.com/zeehio/speech-tools/archive/upstream/2.3-cu
 # SPTK:
 # =========
 # -- Download parameters--
-SPTK_File = SPTK-3.4.1.tar.gz
-SPTK_MD5 = 42615c62edcc0e1df5a83535d0b074f2
-SPTK_URL = http://sourceforge.net/projects/sp-tk/files/SPTK/SPTK-3.4.1/SPTK-3.4.1.tar.gz/download
+SPTK_File = SPTK-3.6.tar.gz
+SPTK_MD5 = 36300cabd58dd97ac1394aea5ab4fccb
+SPTK_URL = http://sourceforge.net/projects/sp-tk/files/SPTK/SPTK-3.6/SPTK-3.6.tar.gz/download
 
 # hts_engine:
 # =========
 # -- Download parameters--
-htsengine_File = hts_engine_API-1.05.tar.gz
-htsengine_MD5 = cd711b63b2bb8ce42fadb234e735a5fd
-htsengine_URL = http://sourceforge.net/projects/hts-engine/files/hts_engine%20API/hts_engine_API-1.05/hts_engine_API-1.05.tar.gz/download
+htsengine_File = hts_engine_API-1.08.tar.gz
+htsengine_MD5 = c0bfe613eb18e5cd923d3a9809716c27
+htsengine_URL = http://sourceforge.net/projects/hts-engine/files/hts_engine%20API/hts_engine_API-1.08/hts_engine_API-1.08.tar.gz/download
 
 # HTS:
 # =========
 # -- Download parameters--
-HTS_File = HTS-2.2_for_HTK-3.4.1.tar.bz2
-HTS_MD5 = 76b7674a01f1edfeb5b4bbca4f5e39a2
-HTS_URL = http://hts.sp.nitech.ac.jp/archives/2.2/HTS-2.2_for_HTK-3.4.1.tar.bz2
+HTS_File = HTS-2.3alpha_for_HTK-3.4.1.tar.bz2
+HTS_MD5 = 560f8fad439cf9066ce894dff1973123
+HTS_URL = http://hts.sp.nitech.ac.jp/archives/2.3alpha/HTS-2.3alpha_for_HTK-3.4.1.tar.bz2
 
 # HTK:
 # =========
@@ -101,9 +101,9 @@ configure_Festival: download_Festival configure_SpeechTools
 
 configure_SPTK: download_SPTK
 	if [ ! -f $(toolsdir)/bin/x2x ]; then \
-		rm -rf "SPTK-3.4.1" && \
-		tar xzf $(SPTK_File) && \
-		cd "SPTK-3.4.1" && \
+		rm -rf "SPTK" && mkdir "SPTK" && \
+		tar xzf $(SPTK_File) -C SPTK --strip-components 1 && \
+		cd "SPTK" && \
 		./configure --prefix=$(toolsdir) && \
 		make && \
 		make install; \
@@ -111,9 +111,9 @@ configure_SPTK: download_SPTK
 
 configure_htsengine: download_htsengine
 	if [ ! -f $(toolsdir)/bin/hts_engine ]; then \
-		rm -rf "hts_engine_API-1.05" && \
-		tar xzf $(htsengine_File) && \
-		cd "hts_engine_API-1.05" && \
+		rm -rf "hts_engine_API" && mkdir "hts_engine_API" && \
+		tar xzf $(htsengine_File) -C "hts_engine_API" --strip-components 1 && \
+		cd "hts_engine_API" && \
 		./configure --prefix=$(toolsdir) && \
 		make && \
 		make install; \
@@ -132,9 +132,9 @@ configure_HTS: download_HTS download_HDecode download_HTS
 		cp $(HTS_File) htspatch && \
 		cd htspatch && \
 		tar xjf $(HTS_File) && \
-		mv HTS-2.2_for_HTK-3.4.1.patch ../hts && \
+		mv HTS-2.3alpha_for_HTK-3.4.1.patch ../hts && \
 		cd ../hts && \
-		patch -p1 -d . < HTS-2.2_for_HTK-3.4.1.patch && \
+		patch -p1 -d . < HTS-2.3alpha_for_HTK-3.4.1.patch && \
 		./configure --enable-hdecode CFLAGS="-fopenmp" --prefix=$(toolsdir) && \
 		make all && \
 		make install; \

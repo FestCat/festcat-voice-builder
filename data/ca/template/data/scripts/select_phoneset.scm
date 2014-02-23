@@ -5,5 +5,5 @@
                       load-path))
 )
 (require 'upc_catalan_phones)
-(Parameter.set 'PhoneSet 'upc_catalan)
+(Param.set 'PhoneSet 'upc_catalan)
 (PhoneSet.select 'upc_catalan)

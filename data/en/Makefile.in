@@ -3,6 +3,7 @@
 
 toolsdir = @PWD@/tools
 workdir = @WORKDIR@
+datdir = @PWD@/data
 
 WGET = @WGET@
 
@@ -11,8 +12,8 @@ WGET = @WGET@
 # =========
 # -- Download parameters --
 HTSDemo_File = HTS-demo_CMU-ARCTIC-SLT.tar.bz2
-HTSDemo_MD5  = 162e3705d134f0cd575fe2b938187cae
-HTSDemo_URL  = http://hts.sp.nitech.ac.jp/archives/2.2/HTS-demo_CMU-ARCTIC-SLT.tar.bz2
+HTSDemo_MD5  = 289d6bfbc98159d13ced7c9788e2a6c8
+HTSDemo_URL  = http://hts.sp.nitech.ac.jp/archives/2.3alpha/HTS-demo_CMU-ARCTIC-SLT.tar.bz2
 
 
 ALLDOWNLOADS = HTSDemo
@@ -44,11 +45,11 @@ configure_HTSDemo: download_HTSDemo
 	fi
 
 
-lang_en_slt: lang_en
+en_slt.spk: lang_en
 	if [ ! -f $(workdir)/en_slt/configure.ac ] || [ ! -f $(workdir)/en_slt/data/utts/cmu_us_arctic_slt_a0001.utt ]; then \
 		rm -rf $(workdir)/en_slt && \
 		mkdir -p $(workdir)/en_slt && \
-		cp -r $(datdir)/en/template/* $(workdir)/en_slt/ && \
+		cp -pr $(datdir)/en/template/* $(workdir)/en_slt/ && \
 		mkdir -p $(workdir)/en_slt/data/raw $(workdir)/en_slt/data/utts && \
 		cp $(datdir)/en/raw/arctic-slt/*.raw $(workdir)/en_slt/data/raw && \
 		cp $(datdir)/en/utts/arctic-slt/*.utt $(workdir)/en_slt/data/utts; \

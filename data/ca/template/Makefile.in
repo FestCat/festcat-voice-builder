@@ -4,7 +4,7 @@
 #           http://hts.sp.nitech.ac.jp/                             #
 # ----------------------------------------------------------------- #
 #                                                                   #
-#  Copyright (c) 2001-2011  Nagoya Institute of Technology          #
+#  Copyright (c) 2001-2012  Nagoya Institute of Technology          #
 #                           Department of Computer Science          #
 #                                                                   #
 #                2001-2008  Tokyo Institute of Technology           #
@@ -55,10 +55,10 @@ voice:
 	rm -rf "@DATASET@_@SPEAKER@_hts"
 	cp -r package "@DATASET@_@SPEAKER@_hts"
 	cp voices/qst@QNUM@/ver@VER@/* "@DATASET@_@SPEAKER@_hts/hts"
-	mv "@DATASET@_@SPEAKER@_hts/configure.in" "@DATASET@_@SPEAKER@_hts/configure.in.tmp"
-	sed s/!VOICENAME!/@DATASET@_@SPEAKER@_hts/g < "@DATASET@_@SPEAKER@_hts/configure.in.tmp"  > \
-	     "@DATASET@_@SPEAKER@_hts/configure.in"
-	rm "@DATASET@_@SPEAKER@_hts/configure.in.tmp"
+	mv "@DATASET@_@SPEAKER@_hts/configure.ac" "@DATASET@_@SPEAKER@_hts/configure.ac.tmp"
+	sed s/!VOICENAME!/@DATASET@_@SPEAKER@_hts/g < "@DATASET@_@SPEAKER@_hts/configure.ac.tmp"  > \
+	     "@DATASET@_@SPEAKER@_hts/configure.ac"
+	rm "@DATASET@_@SPEAKER@_hts/configure.ac.tmp"
 	autoconf -i
 	tar czf "@DATASET@_@SPEAKER@_hts.tgz" "@DATASET@_@SPEAKER@_hts"
 	echo "Package available: \"@DATASET@_@SPEAKER@_hts.tgz\""

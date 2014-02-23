@@ -20,11 +20,7 @@ Some dependencies are not installed automatically:
    - sox
    - perl
 
-2. Tcl/Tk with [Snack](http://www.speech.kth.se/snack/): 
-   - If you are under Debian, you will need `libsnack2-dev`.
-   - If it is not available in your package manager, download and install [ActiveTcl-8.4](http://www.activestate.com/activetcl/downloads).
-
-3. I also needed the Debian package `libx11-dev` to build HTS. Sorry for not providing more details.
+2. I also needed the Debian package `libx11-dev` to build HTS. Sorry for not providing more details.
 
 ## Language independent tools automatically downloaded, built and run
 
@@ -68,5 +64,5 @@ In order to train the Catalan HTS voices, run:
     make ca_ona.spk
     make ca_bet.spk
     make ca_pau.spk
-
+    make en_slt.spk
 
