@@ -12,9 +12,9 @@ WGET = @WGET@
 SPKNAMES = bet eli eva jan mar ona pau pep pol teo uri
 
 # upc_ca_base:
-upc_ca_base_File = upc_ca_base.tgz
-upc_ca_base_MD5 = 765cc8bd8c57bdd0f4d2ad6d160c0eba
-upc_ca_base_URL = http://www.talp.upc.edu/festcat/download/upc_ca_base-2.0.tgz
+upc_ca_base_File = upc_ca_base-3.0.5-src.tgz
+upc_ca_base_MD5 = 1f62a506a1c633e0e6dbef81e223bb27
+upc_ca_base_URL = https://github.com/FestCat/festival-ca/archive/upstream/3.0.5.tar.gz
 
 .PHONY: all lang_ca ca_ona upc_ca_base %.spk
 
@@ -24,9 +24,10 @@ all: lang_ca ca_ona
 lang_ca: upc_ca_base
 
 upc_ca_base: download_upc_ca_base
-	tar xzf $(upc_ca_base_File)
-	cd upc_ca_base-2.0 && \
-	./configure --enable-festivalpath=$(toolsdir)/festival/bin && \
+	mkdir -p upc_ca_base && \
+	tar xzf $(upc_ca_base_File) -C upc_ca_base --strip-components 1 && \
+	cd upc_ca_base && \
+	./configure --enable-onlyinstall --enable-festivalpath=$(toolsdir)/festival/bin && \
 	$(MAKE) install
 
 
@@ -39,20 +40,19 @@ download_upc_ca_base:
 
 %.spk: %.download lang_ca
 	if test ! -f $(workdir)/$*/configure.ac  -o  ! -d $(workdir)/$*/data/utts/  -o   ! -f $(workdir)/$*/data/utts/*.utt  ; then \
-		rm -rf $(workdir)/$* && \
-		mkdir -p $(workdir)/$* && \
+		rm -rf $(workdir)/$* && mkdir -p $(workdir)/$* && \
 		cp -r $(datdir)/ca/template/* $(workdir)/$*/ && \
 		sed s/SPEAKER/$(subst ca_,,$*)/g < $(workdir)/$*/package/festvox/upc_ca_SPEAKER_hts.scm > $(workdir)/$*/package/festvox/upc_ca_$(subst ca_,,$*)_hts.scm && \
 		rm $(workdir)/$*/package/festvox/upc_ca_SPEAKER_hts.scm && \
 		mkdir -p $(workdir)/$*/data/raw $(workdir)/$*/data/utts && \
-		if test  ! -d $(datdir)/ca/$*/upc_$*_raw48/   -o   ! -f $(datdir)/ca/$*/upc_$*_raw48/*.raw  ; then \
-			tar xjf $(datdir)/ca/$*/upc_$*_raw48.tar.bz2 -C $(datdir)/ca/$*; \
+		if test  ! -d $(datdir)/ca/$*/upc_$*_raw/   -o   ! -f $(datdir)/ca/$*/upc_$*_raw/*.raw  ; then \
+			tar xjf $(datdir)/ca/$*/upc_$*_raw.tar.bz2 -C $(datdir)/ca/$*; \
 		fi && \
-		mv $(datdir)/ca/$*/upc_$*_raw48/*.raw $(workdir)/$*/data/raw && \
-		rmdir $(datdir)/ca/$*/upc_$*_raw48/ && \
-		tar xzf $(datdir)/ca/$*/upc_$*_utts.tgz -C $(datdir)/ca/$*  && \
-		mv $(datdir)/ca/$*/upc_$*_utts/*.utt $(workdir)/$*/data/utts && \
-		rmdir $(datdir)/ca/$*/upc_$*_utts/; \
+		mv $(datdir)/ca/$*/upc_$*_raw/recordings/*.raw $(workdir)/$*/data/raw && \
+		$(RM) -rf $(datdir)/ca/$*/upc_$*_raw/ && \
+		tar xjf $(datdir)/ca/$*/upc_$*_utt.tar.bz2 -C $(datdir)/ca/$*  && \
+		mv $(datdir)/ca/$*/upc_$*_utt/utt/*.utt $(workdir)/$*/data/utts && \
+		$(RM) -rf $(datdir)/ca/$*/upc_$*_utt/; \
 	fi; \
 	cd $(workdir)/$* && \
 	. $(datdir)/ca/speakerprop.sh $(subst ca_,,$*) && \
@@ -72,23 +72,16 @@ download_upc_ca_base:
 %.download: %.downutt %.downraw
 	echo ""
 
-%.downutt: md5sum.txt
-	mkdir -p "$*" && \
-	cd "$*" && \
-	grep "upc_$*_utts.tgz" < ../md5sum.txt | md5sum -c --status && echo "$* (utts) already downloaded" || \
-	( rm -f "upc_$*_utts.tgz" && \
-	$(WGET) http://www.talp.cat/festcat/src/upc_$*_utts.tgz )
+%.downutt:
+	mkdir -p "$*" && cd "$*" && \
+	[ -f "upc_$*_utt.tar.bz2" ] && echo "$* (utts) already downloaded" || \
+	$(WGET) --output-document=upc_$*_utt.tar.bz2 http://festcat.talp.cat/download/data/upc_$*_utt-1.0.tar.bz2 
 
 
-%.downraw: md5sum.txt
-	mkdir -p "$*" && \
-	cd "$*" && \
-	grep "upc_$*_raw48.tar.bz2" < ../md5sum.txt | md5sum -c --status && echo "$* (raw) already downloaded" || \
-	( rm -f "upc_$*_raw48.tar.bz2" && \
-	$(WGET) http://www.talp.cat/festcat/src/upc_$*_raw48.tar.bz2 )
+%.downraw:
+	mkdir -p "$*" && cd "$*" && \
+	[ -f "upc_$*_raw.tar.bz2" ] && echo "$* (raw) already downloaded" || \
+	$(WGET) --output-document=upc_$*_raw.tar.bz2 http://festcat.talp.cat/download/data/upc_$*_raw-1.0.tar.bz2
 
-
-md5sum.txt:
-	$(WGET) http://www.talp.cat/festcat/src/md5sum.txt || exit 1
 
 

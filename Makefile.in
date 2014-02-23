@@ -37,3 +37,18 @@ space:= $(empty) $(empty)
 	cd $(datdir)/$(word 1,$(subst _,$(space),$@)) && \
 	$(MAKE) $@
 
+
+clean:
+	$(RM) -rf deps/HDecode-3.4.1.tar.gz
+	$(RM) -rf deps/HTK-3.4.1.tar.gz
+	$(RM) -rf deps/HTS-2.2_for_HTK-3.4.1.tar.bz2
+	$(RM) -rf deps/SPTK-3.4.1.tar.gz
+	$(RM) -rf deps/festival-*.tar.gz
+	$(RM) -rf deps/hts_engine_API-1.05.tar.gz
+	$(RM) -rf deps/speech_tools-*.tar.gz
+	$(RM) -rf tools
+
+distclean:
+	$(RM) -rf Makefile autom4te.cache config.log config.status
+	$(RM) -rf data/ca/Makefile data/en/Makefile deps/Makefile
+

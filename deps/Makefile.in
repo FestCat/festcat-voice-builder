@@ -8,16 +8,16 @@ WGET = @WGET@
 # Festival:
 # =========
 # -- Download parameters--
-Festival_File = festival-2.1-release.tar.gz
-Festival_MD5 = c93eb3e389ed171ab9abd46afe8897a8
-Festival_URL = http://www.cstr.ed.ac.uk/downloads/festival/2.1/festival-2.1-release.tar.gz
+Festival_File = festival-2.3-current.tar.gz
+Festival_MD5 = 8ecc6bcef809a3a0019ecbd7ea320797
+Festival_URL = https://github.com/zeehio/festival/archive/upstream/2.3-current-2013-10-16.tar.gz
 
 # Speech tools:
 # =========
 # -- Download parameters--
-SpeechTools_File = speech_tools-2.1-release.tar.gz
-SpeechTools_MD5 = 6920ddc75b042910a3bcfee3ab106938
-SpeechTools_URL = http://www.cstr.ed.ac.uk/downloads/festival/2.1/speech_tools-2.1-release.tar.gz
+SpeechTools_File = speech_tools-2.3-current.tar.gz
+SpeechTools_MD5 = 0fb4e725d25ea53125d2092657071fe3
+SpeechTools_URL = https://github.com/zeehio/speech-tools/archive/upstream/2.3-current-2013-10-16.tar.gz
 
 # SPTK:
 # =========
@@ -80,8 +80,8 @@ $(download_all):
 configure_SpeechTools: download_SpeechTools
 	if [ ! -f $(toolsdir)/speech_tools/bin/ch_wave ]; then \
 		rm -rf $(toolsdir)/speech_tools && \
-		tar xzf $(SpeechTools_File) && \
-		mv "speech_tools" $(toolsdir)/speech_tools && \
+		mkdir $(toolsdir)/speech_tools && \
+		tar xzf $(SpeechTools_File) -C $(toolsdir)/speech_tools --strip-components 1 && \
 		cd $(toolsdir)/speech_tools && \
 		./configure && \
 		make && \
@@ -91,8 +91,8 @@ configure_SpeechTools: download_SpeechTools
 configure_Festival: download_Festival configure_SpeechTools
 	if [ ! -f $(toolsdir)/festival/bin/festival ]; then \
 		rm -rf $(toolsdir)/festival && \
-		tar xzf $(Festival_File) && \
-		mv "festival" $(toolsdir) && \
+		mkdir $(toolsdir)/festival && \
+		tar xzf $(Festival_File) -C $(toolsdir)/festival --strip-components 1 && \
 		cd $(toolsdir)/"festival" && \
 		./configure && \
 		make && \
