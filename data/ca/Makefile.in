@@ -63,7 +63,6 @@ download_upc_ca_base:
 	            SPEAKER=$(subst ca_,,$*) && \
 	$(MAKE) data && \
 	$(MAKE) voice && \
-	(cd $(workdir)/$*/upc_$*_hts && autoconf) && \
 	$(MAKE) upc_$*_hts.tgz && \
 	mkdir -p $(resultsdir) && \
 	cp $(workdir)/$*/upc_$*_hts.tgz $(resultsdir)

@@ -59,7 +59,8 @@ voice:
 	sed s/!VOICENAME!/@DATASET@_@SPEAKER@_hts/g < "@DATASET@_@SPEAKER@_hts/configure.ac.tmp"  > \
 	     "@DATASET@_@SPEAKER@_hts/configure.ac"
 	rm "@DATASET@_@SPEAKER@_hts/configure.ac.tmp"
-	autoconf -i
+	(cd "@DATASET@_@SPEAKER@_hts" && autoconf -i)
+	rm -rf "@DATASET@_@SPEAKER@_hts/autom4te.cache"
 	tar czf "@DATASET@_@SPEAKER@_hts.tgz" "@DATASET@_@SPEAKER@_hts"
 	echo "Package available: \"@DATASET@_@SPEAKER@_hts.tgz\""
 
