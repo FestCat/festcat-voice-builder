@@ -12,9 +12,9 @@ WGET = @WGET@
 SPKNAMES = bet eli eva jan mar ona pau pep pol teo uri
 
 # upc_ca_base:
-upc_ca_base_File = upc_ca_base-3.0.5-src.tgz
-upc_ca_base_MD5 = 1f62a506a1c633e0e6dbef81e223bb27
-upc_ca_base_URL = https://github.com/FestCat/festival-ca/archive/upstream/3.0.5.tar.gz
+upc_ca_base_File = upc_ca_base-3.0.6-src.tgz
+upc_ca_base_MD5 = ae681cdf3bcae00bb8095123c9f58f7e
+upc_ca_base_URL = https://github.com/FestCat/festival-ca/archive/upstream/3.0.6.tar.gz
 
 .PHONY: all lang_ca ca_ona upc_ca_base %.spk
 
