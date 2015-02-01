@@ -31,6 +31,9 @@ ALLCONFIGURES = festlex_cmu festlex_poslex
 download_all = $(addprefix download_,$(ALLDOWNLOADS)) 
 configure_all = $(addprefix configure_,$(ALLCONFIGURES)) 
 
+empty:=
+space:= $(empty) $(empty)
+
 .PHONY: all lang_en $(download_all) $(configure_all) %.spk
 
 all: lang_en en_slt.spk
@@ -64,24 +67,24 @@ $(download_all):
 
 
 %.spk: %.download lang_en
-	$(eval SPK := $(word 1,$(subst _,$(space),$@)))
+	$(eval SPK := $(word 2,$(subst _,$(space),$*)))
 	if test ! -f $(workdir)/$*/configure.ac  -o  ! -d $(workdir)/$*/data/utts/  -o   ! -f $(workdir)/$*/data/utts/*.utt  ; then \
 		rm -rf $(workdir)/$* && mkdir -p $(workdir)/$* && \
 		cp -r $(datdir)/en/template/* $(workdir)/$*/ && \
-		for mytemplatescm in $$($(workdir)/$*/package/festvox/*SPEAKER*); do \
+		for mytemplatescm in $$(ls $(workdir)/$*/package/festvox/*SPEAKER*); do \
 		    mycustomscm=$${mytemplatescm//SPEAKER/$(SPK)} && \
 		    sed s/SPEAKER/$(SPK)/g < $$mytemplatescm > $$mycustomscm && \
-		    rm $$mytemplatescm && \
-		fi && \
+		    rm $$mytemplatescm;  \
+		done; \
 		mkdir -p $(workdir)/$*/data/raw $(workdir)/$*/data/utts && \
 		if test  ! -d $(datdir)/en/$*/cmu_us_$(SPK)_arctic/   -o   ! -f $(datdir)/en/$*/cmu_us_$(SPK)_arctic/wav/*.wav  ; then \
 			tar xjf $(datdir)/en/$*/cmu_us_$(SPK)_arctic.tar.bz2 -C $(datdir)/en/$*; \
 		fi && \
-		for wavfile in $$($(datdir)/en/$*/cmu_us_$(SPK)_arctic/wav/*.wav); do \
+		for wavfile in $$(ls $(datdir)/en/$*/cmu_us_$(SPK)_arctic/wav/*.wav); do \
 		    echo "Converting $$wavfile" && \
 		    rawfile="$(workdir)/$*/data/$$(basename $${wavfile%.*}).raw" && \
-		    $(SOX) "$$wavfile" -r 16000 -e signed-integer -b 16 "$$rawfile" && \
-		done && \
+		    $(SOX) "$$wavfile" -r 16000 -e signed-integer -b 16 "$$rawfile";  \
+		done; \
 		mv $(datdir)/en/$*/cmu_us_$(SPK)_arctic/wav/*.wav $(workdir)/$(SPK)/data/raw && \
 		$(RM) -rf $(datdir)/ca/$(SPK)/upc_$(SPK)_raw/ && \
 		mv $(datdir)/en/$*/cmu_us_$(SPK)_arctic/festival/utts/*.utt $(workdir)/$*/data/utts && \
@@ -102,14 +105,14 @@ $(download_all):
 
 
 %.download:
-	$(eval SPK := $(word 1,$(subst _,$(space),$@)))
+	$(eval SPK := $(word 2,$(subst _,$(space),$*)))
 	mkdir -p "$*" && cd "$*" && \
-	[ -f "cmu_us_$(SPK)_arctic.tar.bz2" ] && echo "$(SPK) already downloaded" || \
 	if [ "x$(SPK)" = "xawb" ]; then \
 	  version="0.90"; \
 	else \
 	  version="0.95"; \
 	fi && \
+	[ -f "cmu_us_$(SPK)_arctic.tar.bz2" ] && echo "$(SPK) already downloaded" || \
 	$(WGET) --output-document=cmu_us_$(SPK)_arctic.tar.bz2 http://www.speech.cs.cmu.edu/cmu_arctic/packed/cmu_us_$(SPK)_arctic-$$version-release.tar.bz2 
 
 
