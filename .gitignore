@@ -26,3 +26,6 @@ data/ca/ca_*
 data/ca/md5sum.txt
 data/ca/upc_ca_base
 data/ca/upc_ca_base*
+deps/SPTK/
+deps/hts_engine_API
+results
