@@ -4,7 +4,7 @@
 #           http://hts.sp.nitech.ac.jp/                             #
 # ----------------------------------------------------------------- #
 #                                                                   #
-#  Copyright (c) 2001-2012  Nagoya Institute of Technology          #
+#  Copyright (c) 2001-2014  Nagoya Institute of Technology          #
 #                           Department of Computer Science          #
 #                                                                   #
 #                2001-2008  Tokyo Institute of Technology           #
@@ -69,7 +69,7 @@ clean-data:
 	@ (cd data ; $(MAKE) clean)
 
 clean-voice:
-	rm -rf configs edfiles gen models proto stats trees voices gv
+	rm -rf models stats edfiles trees gv mspf voices gen proto configs
 
 distclean: clean
 	@ (cd data; $(MAKE) distclean)

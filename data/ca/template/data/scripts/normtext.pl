@@ -5,12 +5,8 @@
 #           http://hts.sp.nitech.ac.jp/                             #
 # ----------------------------------------------------------------- #
 #                                                                   #
-#  Copyright (c) 2001-2014  Nagoya Institute of Technology          #
+#  Copyright (c) 2012-2014  Nagoya Institute of Technology          #
 #                           Department of Computer Science          #
-#                                                                   #
-#                2001-2008  Tokyo Institute of Technology           #
-#                           Interdisciplinary Graduate School of    #
-#                           Science and Engineering                 #
 #                                                                   #
 # All rights reserved.                                              #
 #                                                                   #
@@ -43,40 +39,102 @@
 # POSSIBILITY OF SUCH DAMAGE.                                       #
 # ----------------------------------------------------------------- #
 
-if ( @ARGV < 5 ) {
-   print "addhtkheader.pl sampling_rate frame_shift byte_per_frame HTK_feature_type infile\n";
+if ( @ARGV != 1 ) {
+   print "txtnorm.pl infile\n";
    exit(0);
 }
 
-$samprate   = $ARGV[0];
-$frameshift = $ARGV[1];
-$byte       = $ARGV[2];
-$type       = $ARGV[3];
-$infile     = $ARGV[4];
+$infile = $ARGV[0];
 
-# make HTK header
+# load text
+$text = "";
 open( INPUT, "$infile" ) || die "Cannot open file: $infile";
-@STAT = stat(INPUT);
-read( INPUT, $DATA, $STAT[7] );
-$nframe = $STAT[7] / $byte;
+while ( $input = <INPUT> ) {
+   $text .= $input;
+}
 close(INPUT);
 
-# number of frames in long
-$NFRAME = pack( "l", $nframe );
+@word = ();
+@type = ();
+@left = ();
 
-# frame shift in long
-$frameshift = 10000000 * $frameshift / $samprate;
-$FRAMESHIFT = pack( "l", $frameshift );
+while ( $text =~ /(['0-9a-zA-Z']+)/ ) {    # digit or alphabet or apostrophe
+   my $w         = $1;
+   my $index     = index( $text, $w );
+   my $separator = substr( $text, 0, $index );
+   my $t         = "unknown";
+   my $l         = "unknown";
 
-# bytes of each frame in short
-$BYTE = pack( "s", $byte );
+   if ( $w =~ /(^[a-zA-Z]+$)/ ) {
+      $t = "alphabet";
+   }
+   elsif ( $w =~ /(^[0-9]+$)/ ) {
+      $t = "digit";
+   }
 
-# HTK feature type in short
-$TYPE = pack( "s", $type );
+   if ( $separator eq "-" ) {
+      $l = "hyphen";
+   }
+   else {
+      $separator =~ s/\s//g;
+      if ( $separator eq "." ) {
+         $l = "period";
+      }
+      elsif ( $separator eq "" ) {
+         $l = "space";
+      }
+      elsif ( $separator eq "," ) {
+         $l = "comma";
+      }
+      elsif ( $separator eq "?" ) {
+         $l = "question";
+      }
+      else {
+         print STDERR "WARNING: unknown separator [$separator]\n";
+         if ( index( $separator, "?" ) >= 0 ) {
+            $l = "question";
+         }
+      }
+   }
 
-# output header and data
-print $NFRAME;
-print $FRAMESHIFT;
-print $BYTE;
-print $TYPE;
-print $DATA;
+   push( @word, $w );
+   push( @type, $t );
+   push( @left, $l );
+
+   substr( $text, 0, $index + length($w) ) = "";
+}
+
+$question = 0;
+if ( index( $text, "?" ) >= 0 ) {
+   $question = 1;
+}
+
+if ( @word < 1 ) {
+   exit(0);
+}
+
+for ( $i = 0 ; $i < @word ; $i++ ) {
+   if ( $i == 0 ) {
+      print "$word[$i]";
+   }
+   else {
+      if ( $type[ $i - 1 ] eq "digit" && $type[$i] eq "digit" && $left[$i] eq "period" ) {
+         print ".$word[$i]";
+      }
+      elsif ( $left[$i] eq "hyphen" ) {
+         print "-$word[$i]";
+      }
+      elsif ( $left[$i] eq "space" ) {
+         print " $word[$i]";
+      }
+      else {
+         print ", $word[$i]";
+      }
+   }
+}
+if ($question) {
+   print "?\n";
+}
+else {
+   print ".\n";
+}

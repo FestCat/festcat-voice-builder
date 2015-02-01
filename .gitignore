@@ -6,7 +6,6 @@ config.status
 configure.scan
 data/*/raw
 data/*/utts
-data/en/template
 deps/*.tar.gz
 deps/*.tar.bz2
 deps/HDecode*.tar.gz

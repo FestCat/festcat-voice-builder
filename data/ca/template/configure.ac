@@ -1,6 +1,6 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(HTS-demo_CMU-ARCTIC-SLT,2.3 alpha,hts-users@sp.nitech.ac.jp)
-AC_COPYRIGHT(Copyright 2001-2012 Nagoya Institute of Technology)
+AC_INIT(HTS-demo_CMU-ARCTIC-SLT, 2.3 beta, hts-users@sp.nitech.ac.jp)
+AC_COPYRIGHT(Copyright 2001-2014 Nagoya Institute of Technology)
 AC_COPYRIGHT(Copyright 2001-2008 Tokyo Institute of Technology)
 
 
@@ -21,12 +21,6 @@ if test ! -f "$WC"; then
 	AC_MSG_ERROR(Can't find wc)
 fi
 
-# tee
-AC_PATH_PROG([TEE], [tee], [/usr/bin], [$PATH:/usr/bin])
-if test ! -f "$TEE"; then
-	AC_MSG_ERROR(Can't find tee)
-fi
-
 
 
 # festival
@@ -35,7 +29,13 @@ AC_ARG_WITH(fest-search-path,
 		AS_HELP_STRING([--with-fest-search-path],[specify the additional festival search path]),
 		[fest_search_path=$withval])
 
-# dumpfeats (festival)
+# text2utt
+AC_PATH_PROG([TEXT2UTT], [text2utt], [:], [${fest_search_path}:$PATH])
+if test ! -f "$TEXT2UTT"; then
+	AC_MSG_ERROR(Can't find text2utt of festival)
+fi
+
+# dumpfeats
 AC_PATH_PROG([DUMPFEATS], [dumpfeats], [:], [${fest_search_path}:$PATH])
 if test ! -f "$DUMPFEATS"; then
 	AC_MSG_ERROR(Can't find dumpfeats of festival)
@@ -199,6 +199,12 @@ if test ! -f "$DFS"; then
 	AC_MSG_ERROR(Can't find dfs of SPTK)
 fi
 
+# mgc2sp
+AC_PATH_PROG([MGC2SP], [mgc2sp], [:], [${sptk_search_path}:$PATH])
+if test ! -f "$MGC2SP"; then
+	AC_MSG_ERROR(Can't find mgc2sp of SPTK)
+fi
+
 # minmax
 AC_PATH_PROG([MINMAX], [minmax], [:], [${sptk_search_path}:$PATH])
 if test ! -f "$MINMAX"; then
@@ -222,6 +228,85 @@ AC_PATH_PROG([PITCH], [pitch], [:], [${sptk_search_path}:$PATH])
 if test ! -f "$PITCH"; then
 	AC_MSG_ERROR(Can't find pitch of SPTK)
 fi
+
+# spec
+AC_PATH_PROG([SPEC], [spec], [:], [${sptk_search_path}:$PATH])
+if test ! -f "$SPEC"; then
+	AC_MSG_ERROR(Can't find spec of SPTK)
+fi
+
+# transpose
+AC_PATH_PROG([TRANSPOSE], [transpose], [:], [${sptk_search_path}:$PATH])
+if test ! -f "$TRANSPOSE"; then
+	AC_MSG_ERROR(Can't find transpose of SPTK)
+fi
+
+# phase
+AC_PATH_PROG([PHASE], [phase], [:], [${sptk_search_path}:$PATH])
+if test ! -f "$PHASE"; then
+	AC_MSG_ERROR(Can't find phase of SPTK)
+fi
+
+# ifftr
+AC_PATH_PROG([IFFTR], [ifftr], [:], [${sptk_search_path}:$PATH])
+if test ! -f "$IFFTR"; then
+	AC_MSG_ERROR(Can't find ifftr of SPTK)
+fi
+
+
+
+# MATLAB
+# MATLAB search path
+AC_ARG_WITH(matlab-search-path,
+		AS_HELP_STRING([--with-matlab-search-path],[specify the additional MATLAB binary search path]),
+		[matlab_search_path=$withval])
+AC_PATH_PROG([MATLAB], [matlab], [:], [${matlab_search_path}:$PATH])
+if test ! -f "$MATLAB"; then
+	if test -z "$USESTRAIGHT"; then
+		:
+	elif test $USESTRAIGHT -ne 1; then
+		:
+	else
+		AC_MSG_ERROR(Can't find MATLAB)
+	fi
+fi
+MATLAB="$MATLAB -nodisplay -nosplash -nojvm"
+
+
+
+# STRAIGHT
+# STRAIGHT search path
+AC_ARG_WITH(straight-path,
+		AS_HELP_STRING([--with-straight-path],[specify the STRAIGHT MATLAB code path]),
+		[STRAIGHT=$withval])
+if test ! -f "$STRAIGHT/exstraightsource.p" -a ! -f "$STRAIGHT/exstraightsource.m"; then
+	if test -z "$USESTRAIGHT"; then
+		:
+	elif test $USESTRAIGHT -ne 1; then
+		:
+	else
+		AC_MSG_ERROR(Can't find exstraightsource in $STRAIGHT)
+	fi
+fi
+if test ! -f "$STRAIGHT/exstraightspec.p"   -a ! -f "$STRAIGHT/exstraightspec.m";   then
+	if test -z "$USESTRAIGHT"; then
+		:
+	elif test $USESTRAIGHT -ne 1; then
+		:
+	else
+		AC_MSG_ERROR(Can't find exstraightspec in $STRAIGHT)
+	fi
+fi
+if test ! -f "$STRAIGHT/exstraightsynth.p"  -a ! -f "$STRAIGHT/exstraightsynth.m";  then
+	if test -z "$USESTRAIGHT"; then
+		:
+	elif test $USESTRAIGHT -ne 1; then
+		:
+	else
+		AC_MSG_ERROR(Can't find exstraightsynth in $STRAIGHT)
+	fi
+fi
+AC_SUBST(STRAIGHT)
 
 
 
@@ -290,7 +375,13 @@ AC_ARG_WITH(hts-engine-search-path,
 # hts_engine
 AC_PATH_PROG([ENGINE], [hts_engine], [:], [${hts_engine_search_path}:$PATH])
 if test ! -f "$ENGINE"; then
+	if test -z "$USESTRAIGHT"; then
 	AC_MSG_ERROR(Can't find hts_engine)
+	elif test $USESTRAIGHT -ne 1; then
+		AC_MSG_ERROR(Can't find hts_engine)
+	else
+		:
+	fi
 fi
 
 
@@ -353,23 +444,34 @@ AC_SUBST(PWD)
 
 # setting of mel-generalized cepstral analysis, F0 extraction, and postfiltering related settings
 # parse command-line arguments
-AC_ARG_VAR([FRAMELEN],[Frame length in point (default=1200)])
-AC_ARG_VAR([FRAMESHIFT],[Frame shift in point (default=240)])
-AC_ARG_VAR([WINDOWTYPE],[Window type -> 0: Blackman  1: Hamming  2: Hanning (default=1)])
-AC_ARG_VAR([NORMALIZE],[Normalization -> 0: none  1: by power  2: by magnitude (default=1)])
+AC_ARG_VAR([USEUTT],[generate labels from utt files instead of text files (0:off or 1:on, default=1)])
+AC_ARG_VAR([USESTRAIGHT],[turn on STRAIGHT-based analysis (0:off or 1:on, default=0)])
+AC_ARG_VAR([FRAMELEN],[frame length in point (default=1200)])
+AC_ARG_VAR([FRAMESHIFT],[frame shift in point (default=240)])
+AC_ARG_VAR([WINDOWTYPE],[window type -> 0: Blackman  1: Hamming  2: Hanning (default=1)])
+AC_ARG_VAR([NORMALIZE],[normalization -> 0: none  1: by power  2: by magnitude (default=1)])
 AC_ARG_VAR([FFTLEN],[FFT length in point (default=2048)])
-AC_ARG_VAR([SAMPFREQ],[Sampling frequency in Hz (default=48000)])
-AC_ARG_VAR([FREQWARP],[Frequency warping factor (default=0.55)])
-AC_ARG_VAR([GAMMA],[Pole/Zero weight factor (0: mel-cepstral analysis  1: LPC analysis  2,3,...,N: mel-generalized cepstral (MGC) analysis) (default=0)])
-AC_ARG_VAR([MGCORDER],[Order of MGC analysis (default=34 for cepstral form, default=12 for LSP form)])
-AC_ARG_VAR([LNGAIN],[Use logarithmic gain instead of linear gain (default=1)])
-AC_ARG_VAR([LOWERF0],[Lower limit for F0 extraction in Hz (default=110)])
-AC_ARG_VAR([UPPERF0],[Upper limit for F0 extraction in Hz (default=280)])
-AC_ARG_VAR([PSTFILTER_MCP],[Postfiltering factor for mel-cepstral (default=1.4)])
-AC_ARG_VAR([PSTFILTER_LSP],[Postfiltering factor for LSP (default=0.7)])
-AC_ARG_VAR([IMPLEN],[Length of impulse response (default=576)])
+AC_ARG_VAR([SAMPFREQ],[sampling frequency in Hz (default=48000)])
+AC_ARG_VAR([FREQWARP],[frequency warping factor (default=0.55)])
+AC_ARG_VAR([GAMMA],[pole/zero weight factor (0: mel-cepstral analysis  1: LPC analysis  2,3,...,N: mel-generalized cepstral (MGC) analysis) (default=0)])
+AC_ARG_VAR([MGCORDER],[order of MGC analysis (default=34 for cepstral form, default=12 for LSP form)])
+AC_ARG_VAR([BAPORDER],[order of BAP analysis (default=24)])
+AC_ARG_VAR([LNGAIN],[use logarithmic gain instead of linear gain (default=1)])
+AC_ARG_VAR([LOWERF0],[lower limit for F0 extraction in Hz (default=110)])
+AC_ARG_VAR([UPPERF0],[upper limit for F0 extraction in Hz (default=280)])
+AC_ARG_VAR([PSTFILTER_MCP],[postfiltering factor for mel-cepstral (default=1.4)])
+AC_ARG_VAR([PSTFILTER_LSP],[postfiltering factor for LSP (default=0.7)])
+AC_ARG_VAR([IMPLEN],[length of impulse response (default=4096 for cepstral form, default=576 for LSP form)])
 
 # default values
+if test -z "$USEUTT"; then
+	USEUTT=1
+fi
+
+if test -z "$USESTRAIGHT"; then
+	USESTRAIGHT=0
+fi
+
 if test -z "$FRAMELEN"; then
 	FRAMELEN=1200
 fi
@@ -420,6 +522,10 @@ if test -z "$MGCORDER"; then
 	fi
 fi
 
+if test -z "$BAPORDER"; then
+	BAPORDER=24
+fi
+
 if test -z "$LNGAIN"; then
 	LNGAIN=1
 fi
@@ -441,10 +547,15 @@ if test -z "$PSTFILTER_LSP"; then
 fi
 
 if test -z "$IMPLEN"; then
+	if test $GAMMA -eq 0; then
+		IMPLEN=4096
+	else
 	IMPLEN=576
+fi
 fi
 
 MGCVSIZE=`expr $MGCORDER + 1`
+BAPVSIZE=`expr $BAPORDER + 1`
 
 if test $GAMMA -lt 0; then
 	AC_MSG_ERROR(Cannot use MGC coefficients if GAMMA<0!)
@@ -453,6 +564,8 @@ fi
 
 
 # substitute variables
+AC_SUBST(USEUTT)
+AC_SUBST(USESTRAIGHT)
 AC_SUBST(FRAMELEN)
 AC_SUBST(FRAMESHIFT)
 AC_SUBST(WINDOWTYPE)
@@ -462,12 +575,14 @@ AC_SUBST(SAMPFREQ)
 AC_SUBST(FREQWARP)
 AC_SUBST(GAMMA)
 AC_SUBST(MGCORDER)
+AC_SUBST(BAPORDER)
 AC_SUBST(LOWERF0)
 AC_SUBST(UPPERF0)
 AC_SUBST(PSTFILTER_MCP)
 AC_SUBST(PSTFILTER_LSP)
 AC_SUBST(IMPLEN)
 AC_SUBST(MGCVSIZE)
+AC_SUBST(BAPVSIZE)
 
 
 
@@ -475,6 +590,7 @@ AC_SUBST(MGCVSIZE)
 # parse command-line arguments
 AC_ARG_VAR([NMGCWIN],[number of delta windows for MGC coefficients (default=3)])
 AC_ARG_VAR([NLF0WIN],[number of delta windows for log F0 values (default=3)])
+AC_ARG_VAR([NBAPWIN],[number of delta windows for band aperiodicity values (default=3)])
 
 # default values
 if test -z "$NMGCWIN"; then
@@ -485,12 +601,27 @@ if test -z "$NLF0WIN"; then
 	NLF0WIN=3
 fi
 
-F0STREN=`expr $NLF0WIN + 1`
+if test -z "$NBAPWIN"; then
+	NBAPWIN=3
+fi
+
+MGCSTRST=1
+MGCSTREN=1
+LF0STRST=`expr $MGCSTREN + 1`
+LF0STREN=`expr $MGCSTREN + $NLF0WIN`
+BAPSTRST=`expr $LF0STREN + 1`
+BAPSTREN=`expr $LF0STREN + 1`
 
 # substitute variables
 AC_SUBST(NMGCWIN)
 AC_SUBST(NLF0WIN)
-AC_SUBST(F0STREN)
+AC_SUBST(NBAPWIN)
+AC_SUBST(MGCSTRST)
+AC_SUBST(MGCSTREN)
+AC_SUBST(LF0STRST)
+AC_SUBST(LF0STREN)
+AC_SUBST(BAPSTRST)
+AC_SUBST(BAPSTREN)
 
 
 
@@ -506,8 +637,10 @@ AC_ARG_VAR([MAXDEV],[maximum duration scaling factor (default=10)])
 AC_ARG_VAR([MINDUR],[minimum duration to be evaluated (default=5)])
 AC_ARG_VAR([NMGCTRANSBLK],[number of blocks for MGC transforms (default=3)])
 AC_ARG_VAR([NLF0TRANSBLK],[number of blocks for log F0 transforms (default=1)])
+AC_ARG_VAR([NBAPTRANSBLK],[number of blocks for band aperiodicity transforms (default=3)])
 AC_ARG_VAR([MGCBANDWIDTH],[band width for MGC transforms (default=35 for cepstral form, derault=2 for LSP form)])
 AC_ARG_VAR([LF0BANDWIDTH],[band width for log F0 transforms (default=1)])
+AC_ARG_VAR([BAPBANDWIDTH],[band width for band aperiodicity transforms (default=25)])
 
 # default values
 if test -z "$NSTATE"; then
@@ -550,6 +683,10 @@ if test -z "$NLF0TRANSBLK"; then
 	NLF0TRANSBLK=1
 fi
 
+if test -z "$NBAPTRANSBLK"; then
+	NBAPTRANSBLK=3
+fi
+
 if test -z "$MGCBANDWIDTH"; then
 	if test $GAMMA -eq 0; then
 		MGCBANDWIDTH=$MGCVSIZE
@@ -560,6 +697,10 @@ fi
 
 if test -z "$LF0BANDWIDTH"; then
 	LF0BANDWIDTH=1
+fi
+
+if test -z "$BAPBANDWIDTH"; then
+	BAPBANDWIDTH=25
 fi
 
 # substitute variables
@@ -573,8 +714,10 @@ AC_SUBST(MAXDEV)
 AC_SUBST(MINDUR)
 AC_SUBST(NMGCTRANSBLK)
 AC_SUBST(NLF0TRANSBLK)
+AC_SUBST(NBAPTRANSBLK)
 AC_SUBST(MGCBANDWIDTH)
 AC_SUBST(LF0BANDWIDTH)
+AC_SUBST(BAPBANDWIDTH)
 
 
 # parameter generation algorithm settings
@@ -594,6 +737,7 @@ AC_ARG_VAR([GVWEIGHT],[weight for GV output prob. (default=1.0)])
 AC_ARG_VAR([OPTKIND],[optimization method (STEEPEST, NEWTON, or LBFGS) (default=NEWTON)])
 AC_ARG_VAR([NOSILGV],[turn on GV without silent and pause phoneme (0:off or 1:on, default=1)])
 AC_ARG_VAR([CDGV],[turn on context-dependent GV (0:off or 1:on, default=1)])
+AC_ARG_VAR([USEMSPF],[turn on modulation spectrum-based postfilter (0:off or 1:on, default=1)])
 
 # default values
 if test -z "$PGTYPE"; then
@@ -656,6 +800,10 @@ if test -z "$CDGV"; then
 	CDGV=1
 fi
 
+if test -z "$USEMSPF"; then
+	USEMSPF=1
+fi
+
 # substitute variables
 AC_SUBST(PGTYPE)
 AC_SUBST(MAXEMITER)
@@ -672,6 +820,7 @@ AC_SUBST(GVWEIGHT)
 AC_SUBST(OPTKIND)
 AC_SUBST(NOSILGV)
 AC_SUBST(CDGV)
+AC_SUBST(USEMSPF)
 
 
 

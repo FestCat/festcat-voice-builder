@@ -5,7 +5,7 @@
 #           http://hts.sp.nitech.ac.jp/                             #
 # ----------------------------------------------------------------- #
 #                                                                   #
-#  Copyright (c) 2001-2012  Nagoya Institute of Technology          #
+#  Copyright (c) 2001-2014  Nagoya Institute of Technology          #
 #                           Department of Computer Science          #
 #                                                                   #
 #                2001-2008  Tokyo Institute of Technology           #
@@ -88,6 +88,7 @@ $mlf{'ful'} = "$datdir/labels/full.mlf";
 $cfg{'trn'} = "$prjdir/configs/qst${qnum}/ver${ver}/trn.cnf";
 $cfg{'nvf'} = "$prjdir/configs/qst${qnum}/ver${ver}/nvf.cnf";
 $cfg{'syn'} = "$prjdir/configs/qst${qnum}/ver${ver}/syn.cnf";
+$cfg{'apg'} = "$prjdir/configs/qst${qnum}/ver${ver}/apg.cnf";
 $cfg{'stc'} = "$prjdir/configs/qst${qnum}/ver${ver}/stc.cnf";
 foreach $type (@cmp) {
    $cfg{$type} = "$prjdir/configs/qst${qnum}/ver${ver}/${type}.cnf";
@@ -210,6 +211,21 @@ foreach $type (@cmp) {
    $gvtrv{$type} = "$voice/tree-gv-${type}.inf";
 }
 
+# files and directories for modulation spectrum-based postfilter
+$mspfdir     = "$prjdir/mspf/qst${qnum}/ver${ver}";
+$mspffaldir  = "$mspfdir/fal";
+$scp{'mspf'} = "$mspfdir/fal.scp";
+foreach $type ('mgc') {
+   foreach $mspftype ( "nat", "gen/1mix/$pgtype" ) {
+      $mspfdatdir{$mspftype}   = "$mspfdir/dat/$mspftype";
+      $mspfstatsdir{$mspftype} = "$mspfdir/stats/$mspftype";
+      for ( $d = 0 ; $d < $ordr{$type} ; $d++ ) {
+         $mspfmean{$type}{$mspftype}[$d] = "$mspfstatsdir{$mspftype}/${type}_dim$d.mean";
+         $mspfstdd{$type}{$mspftype}[$d] = "$mspfstatsdir{$mspftype}/${type}_dim$d.stdd";
+      }
+   }
+}
+
 # HTS Commands & Options ========================
 $HCompV{'cmp'} = "$HCOMPV    -A    -C $cfg{'trn'} -D -T 1 -S $scp{'trn'} -m ";
 $HCompV{'gv'}  = "$HCOMPV    -A    -C $cfg{'trn'} -D -T 1 -S $scp{'gv'}  -m ";
@@ -221,7 +237,7 @@ $HERest{'ful'} = "$HEREST    -A -B -C $cfg{'trn'} -D -T 1 -S $scp{'trn'} -I $mlf
 $HERest{'gv'}  = "$HEREST    -A    -C $cfg{'trn'} -D -T 1 -S $scp{'gv'}  -I $mlf{'gv'}  -m 1 ";
 $HHEd{'trn'}   = "$HHED      -A -B -C $cfg{'trn'} -D -T 1 -p -i ";
 $HSMMAlign     = "$HSMMALIGN -A    -C $cfg{'trn'} -D -T 1 -S $scp{'trn'} -I $mlf{'mon'} -t $beam -w 1.0 ";
-$HMGenS        = "$HMGENS    -A -B -C $cfg{'syn'} -D -T 1 -S $scp{'gen'} -t $beam ";
+$HMGenS        = "$HMGENS    -A -B -C $cfg{'syn'} -D -T 1                               -t $beam ";
 
 # =============================================================
 # ===================== Main Program ==========================
@@ -232,7 +248,7 @@ if ($MKEMV) {
    print_time("preparing environments");
 
    # make directories
-   foreach $dir ( 'models', 'stats', 'edfiles', 'trees', 'gv', 'voices', 'gen', 'proto', 'configs' ) {
+   foreach $dir ( 'models', 'stats', 'edfiles', 'trees', 'gv', 'mspf', 'voices', 'gen', 'proto', 'configs' ) {
       mkdir "$prjdir/$dir",                      0755;
       mkdir "$prjdir/$dir/qst${qnum}",           0755;
       mkdir "$prjdir/$dir/qst${qnum}/ver${ver}", 0755;
@@ -564,11 +580,11 @@ if ($ERST4) {
    }
 }
 
-# HSMMAlign (forced alignment for no-silent GV)
+# HSMMAlign (forced alignment)
 if ($FALGN) {
-   print_time("forced alignment for no-silent GV");
+   print_time("forced alignment");
 
-   if ( $useGV && $nosilgv && @slnt > 0 ) {
+   if ( ( $useGV && $nosilgv && @slnt > 0 ) || ($useMSPF) ) {
 
       # make directory
       mkdir "$gvfaldir", 0755;
@@ -636,6 +652,39 @@ if ($MKUNG) {
    }
 }
 
+# HMGenS & SPTK (training modulation spectrum-based postfilter)
+if ($TMSPF) {
+   print_time("training modulation spectrum-based postfilter");
+
+   if ($useMSPF) {
+
+      $mix     = '1mix';
+      $gentype = "gen/$mix/$pgtype";
+
+      # make directories
+      mkdir "$mspffaldir",               0755;
+      mkdir "$mspfdir/gen",              0755;
+      mkdir "$mspfdir/gen/$mix",         0755;
+      mkdir "$mspfdir/gen/$mix/$pgtype", 0755;
+      foreach $dir ( 'dat', 'stats' ) {
+         mkdir "$mspfdir/$dir",                  0755;
+         mkdir "$mspfdir/$dir/nat",              0755;
+         mkdir "$mspfdir/$dir/gen",              0755;
+         mkdir "$mspfdir/$dir/gen/$mix",         0755;
+         mkdir "$mspfdir/$dir/gen/$mix/$pgtype", 0755;
+      }
+
+      # make scp and fullcontext forced-aligned label files
+      make_full_fal();
+
+      # synthesize speech parameters using model alignment
+      shell("$HMGenS -C $cfg{'apg'} -S $scp{'mspf'} -c $pgtype -H $reclmmf{'cmp'} -N $reclmmf{'dur'} -M $mspfdir/$gentype $lst{'ful'} $lst{'ful'}");
+
+      # estimate statistics for modulation spectrum
+      make_mspf($gentype);
+   }
+}
+
 # HHEd (making unseen models (1mix))
 if ($MKUN1) {
    print_time("making unseen models (1mix)");
@@ -656,7 +705,7 @@ if ($PGEN1) {
    mkdir $dir, 0755;
 
    # generate parameter
-   shell("$HMGenS -c $pgtype -H $rclammf{'cmp'}.$mix -N $rclammf{'dur'}.$mix -M $dir $tiedlst{'cmp'} $tiedlst{'dur'}");
+   shell("$HMGenS -S $scp{'gen'} -c $pgtype -H $rclammf{'cmp'}.$mix -N $rclammf{'dur'}.$mix -M $dir $tiedlst{'cmp'} $tiedlst{'dur'}");
 }
 
 # SPTK (synthesizing waveforms (1mix))
@@ -669,8 +718,10 @@ if ($WGEN1) {
    gen_wave("$dir");
 }
 
+$useMSPF = 0;    # turn off modulation spectrum-based postfilter for following step
+
 # HHEd (converting mmfs to the HTS voice format)
-if ($CONVM) {
+if ( $CONVM && !$usestraight ) {
    print_time("converting mmfs to the HTS voice format");
 
    # models and trees
@@ -708,7 +759,7 @@ if ($CONVM) {
 }
 
 # hts_engine (synthesizing waveforms using hts_engine)
-if ($ENGIN) {
+if ( $ENGIN && !$usestraight ) {
    print_time("synthesizing waveforms using hts_engine");
 
    $dir = "${prjdir}/gen/qst${qnum}/ver${ver}/hts_engine";
@@ -780,7 +831,7 @@ if ($PGENS) {
    mkdir $dir, 0755;
 
    # generate parameter
-   shell("$HMGenS -c $pgtype -H $stcammf{'cmp'} -N $stcammf{'dur'} -M $dir $tiedlst{'cmp'} $tiedlst{'dur'}");
+   shell("$HMGenS -S $scp{'gen'} -c $pgtype -H $stcammf{'cmp'} -N $stcammf{'dur'} -M $dir $tiedlst{'cmp'} $tiedlst{'dur'}");
 }
 
 # SPTK (synthesizing waveforms (stc))
@@ -846,7 +897,7 @@ if ($PGEN2) {
    mkdir $dir, 0755;
 
    # generate parameter
-   shell("$HMGenS -c $pgtype -H $rclammf{'cmp'} -N $rclammf{'dur'} -M $dir $tiedlst{'cmp'} $tiedlst{'dur'}");
+   shell("$HMGenS -S $scp{'gen'} -c $pgtype -H $rclammf{'cmp'} -N $rclammf{'dur'} -M $dir $tiedlst{'cmp'} $tiedlst{'dur'}");
 }
 
 # SPTK (synthesizing waveforms (2mix))
@@ -1149,7 +1200,7 @@ sub make_data_gv {
                if ( $find == 0 ) {
                   $start = int( $arr[0] * ( 1.0e-7 / ( $fs / $sr ) ) );
                   $end   = int( $arr[1] * ( 1.0e-7 / ( $fs / $sr ) ) );
-                  shell("$BCUT -s $start -e $end -l $ordr{$type} +f $datdir/$type/$base.$type >> $gvdatdir/tmp.$type");
+                  shell("$BCUT -s $start -e $end -l $ordr{$type} < $datdir/$type/$base.$type >> $gvdatdir/tmp.$type");
                }
             }
             close(F);
@@ -1507,6 +1558,12 @@ sub make_config {
    print CONF "CDGV       = $boolstring[$cdgv]\n";
 
    close(CONF);
+
+   # config file for alignend parameter generation
+   open( CONF, ">$cfg{'apg'}" ) || die "Cannot open $!";
+   print CONF "MODELALIGN = T\n";
+   close(CONF);
+
 }
 
 # sub routine for generating .hed files for decision-tree clustering
@@ -2096,12 +2153,17 @@ sub postfiltering_lsp($$) {
    my ( $file, $lgopt, $line, $i, @lsp, $d_1, $d_2, $plsp, $data );
 
    $file = "$gendir/${base}.mgc";
-   $lgopt = "-l" if ($lg);
+   if ($lg) {
+      $lgopt = "-L";
+   }
+   else {
+      $lgopt = "";
+   }
 
-   $line = "$LSPCHECK -m " . ( $ordr{'mgc'} - 1 ) . " -s " . ( $sr / 1000 ) . " -c -r 0.1 $file | ";
+   $line = "$LSPCHECK -m " . ( $ordr{'mgc'} - 1 ) . " -s " . ( $sr / 1000 ) . " $lgopt -c -r 0.1 -g -G 1.0E-10 $file | ";
    $line .= "$LSP2LPC -m " . ( $ordr{'mgc'} - 1 ) . " -s " . ( $sr / 1000 ) . " $lgopt | ";
    $line .= "$MGC2MGC -m " . ( $ordr{'mgc'} - 1 ) . " -a $fw -c $gm -n -u -M " . ( $fl - 1 ) . " -A 0.0 -G 1.0 | ";
-   $line .= "$SOPR -P | $VSUM -n $fl | $SOPR -LN -m 0.5 > $gendir/${base}.ene1";
+   $line .= "$SOPR -P | $VSUM -t $fl | $SOPR -LN -m 0.5 > $gendir/${base}.ene1";
    shell($line);
 
    # postfiltering
@@ -2135,10 +2197,10 @@ sub postfiltering_lsp($$) {
    close(LSP);
 
    $line = "$MERGE -s 1 -l 1 -L " . ( $ordr{'mgc'} - 1 ) . " -N " . ( $ordr{'mgc'} - 2 ) . " $gendir/${base}.lsp < $gendir/${base}.gain | ";
-   $line .= "$LSPCHECK -m " . ( $ordr{'mgc'} - 1 ) . " -s " .                     ( $sr / 1000 ) . " -c -r 0.1 | ";
+   $line .= "$LSPCHECK -m " . ( $ordr{'mgc'} - 1 ) . " -s " .                     ( $sr / 1000 ) . " $lgopt -c -r 0.1 -g -G 1.0E-10 | ";
    $line .= "$LSP2LPC -m " .  ( $ordr{'mgc'} - 1 ) . " -s " .                     ( $sr / 1000 ) . " $lgopt | ";
    $line .= "$MGC2MGC -m " .  ( $ordr{'mgc'} - 1 ) . " -a $fw -c $gm -n -u -M " . ( $fl - 1 ) . " -A 0.0 -G 1.0 | ";
-   $line .= "$SOPR -P | $VSUM -n $fl | $SOPR -LN -m 0.5 > $gendir/${base}.ene2 ";
+   $line .= "$SOPR -P | $VSUM -t $fl | $SOPR -LN -m 0.5 > $gendir/${base}.ene2 ";
    shell($line);
 
    $line = "$VOPR -l 1 -d $gendir/${base}.ene2 $gendir/${base}.ene2 | $SOPR -LN -m 0.5 | ";
@@ -2153,27 +2215,29 @@ sub postfiltering_lsp($$) {
 # sub routine for speech synthesis from log f0 and Mel-cepstral coefficients
 sub gen_wave($) {
    my ($gendir) = @_;
-   my ( $line, @FILE, $file, $base );
+   my ( $line, @FILE, $lgopt, $file, $base, $T, $lf0, $bap );
 
    $line  = `ls $gendir/*.mgc`;
    @FILE  = split( '\n', $line );
-   $lgopt = "-l" if ($lg);
-
+   if ($lg) {
+      $lgopt = "-L";
+   }
+   else {
+      $lgopt = "";
+   }
    print "Processing directory $gendir:\n";
    foreach $file (@FILE) {
       $base = `basename $file .mgc`;
       chomp($base);
-      if ( -s $file && -s "$gendir/$base.lf0" ) {
-         print " Synthesizing a speech waveform from $base.mgc and $base.lf0...";
-
-         # convert log F0 to pitch
-         $line = "$SOPR -magic -1.0E+10 -EXP -INV -m $sr -MAGIC 0.0 $gendir/${base}.lf0 > $gendir/${base}.pit";
-         shell($line);
 
          if ( $gm == 0 ) {
 
             # apply postfiltering
-            if ( !$useGV ) {
+         if ($useMSPF) {
+            postfiltering_mspf( $base, $gendir, 'mgc' );
+            $mgc = "$gendir/$base.p_mgc";
+         }
+         elsif ( !$useGV && $pf_mcp != 1.0 ) {
                postfiltering_mcp( $base, $gendir );
                $mgc = "$gendir/$base.p_mgc";
             }
@@ -2184,13 +2248,20 @@ sub gen_wave($) {
          else {
 
             # apply postfiltering
-            if ( !$useGV ) {
+         if ($useMSPF) {
+            postfiltering_mspf( $base, $gendir, 'mgc' );
+            $mgc = "$gendir/$base.p_mgc";
+         }
+         elsif ( !$useGV && $pf_lsp != 1.0 ) {
                postfiltering_lsp( $base, $gendir );
-               $file = "$gendir/$base.p_mgc";
+            $mgc = "$gendir/$base.p_mgc";
+         }
+         else {
+            $mgc = $file;
             }
 
             # MGC-LSPs -> MGC coefficients
-            $line = "$LSPCHECK -m " . ( $ordr{'mgc'} - 1 ) . " -s " . ( $sr / 1000 ) . " -c -r 0.1 $file | ";
+         $line = "$LSPCHECK -m " . ( $ordr{'mgc'} - 1 ) . " -s " . ( $sr / 1000 ) . " $lgopt -c -r 0.1 -g -G 1.0E-10 $mgc | ";
             $line .= "$LSP2LPC -m " . ( $ordr{'mgc'} - 1 ) . " -s " . ( $sr / 1000 ) . " $lgopt | ";
             $line .= "$MGC2MGC -m " . ( $ordr{'mgc'} - 1 ) . " -a $fw -c $gm -n -u -M " . ( $ordr{'mgc'} - 1 ) . " -A $fw -C $gm " . " > $gendir/$base.c_mgc";
             shell($line);
@@ -2198,19 +2269,29 @@ sub gen_wave($) {
             $mgc = "$gendir/$base.c_mgc";
          }
 
+      $lf0 = "$gendir/$base.lf0";
+      $bap = "$gendir/$base.bap";
+
+      if ( !$usestraight && -s $file && -s $lf0 ) {
+         print " Synthesizing a speech waveform from $base.mgc and $base.lf0...";
+
+         # convert log F0 to pitch
+         $line = "$SOPR -magic -1.0E+10 -EXP -INV -m $sr -MAGIC 0.0 $lf0 > $gendir/${base}.pit";
+         shell($line);
+
          # synthesize waveform
          $lfil = `$PERL $datdir/scripts/makefilter.pl $sr 0`;
          $hfil = `$PERL $datdir/scripts/makefilter.pl $sr 1`;
 
-         $line = "$SOPR -m 0 $gendir/$base.pit | $EXCITE -p $fs | $DFS -b $hfil > $gendir/$base.unv";
+         $line = "$SOPR -m 0 $gendir/$base.pit | $EXCITE -n -p $fs | $DFS -b $hfil > $gendir/$base.unv";
          shell($line);
 
-         $line = "$EXCITE -p $fs $gendir/$base.pit | ";
+         $line = "$EXCITE -n -p $fs $gendir/$base.pit | ";
          $line .= "$DFS -b $lfil | $VOPR -a $gendir/$base.unv | ";
-         $line .= "$MGLSADF -m " . ( $ordr{'mgc'} - 1 ) . " -p $fs -a $fw -c $gm $mgc | ";
+         $line .= "$MGLSADF -P 5 -m " . ( $ordr{'mgc'} - 1 ) . " -p $fs -a $fw -c $gm $mgc | ";
          $line .= "$X2X +fs -o > $gendir/$base.raw";
          shell($line);
-         $line = "$RAW2WAV -s $sr -d $gendir $gendir/$base.raw";
+         $line = "$RAW2WAV -s " . ( $sr / 1000 ) . " -d $gendir $gendir/$base.raw";
          shell($line);
 
          $line = "rm -f $gendir/$base.unv";
@@ -2218,9 +2299,327 @@ sub gen_wave($) {
 
          print "done\n";
       }
+      elsif ( $usestraight && -s $file && -s $lf0 && -s $bap ) {
+         print " Synthesizing a speech waveform from $base.mgc, $base.lf0, and $base.bap... ";
+
+         # convert log F0 to F0
+         $line = "$SOPR -magic -1.0E+10 -EXP -MAGIC 0.0 $lf0 > $gendir/${base}.f0 ";
+         shell($line);
+         $T = get_file_size("$gendir/${base}.f0 ") / 4;
+
+         # convert Mel-cepstral coefficients to spectrum
+         if ( $gm == 0 ) {
+            shell( "$MGC2SP -a $fw -g $gm -m " . ( $ordr{'mgc'} - 1 ) . " -l 2048 -o 2 $mgc > $gendir/$base.sp" );
    }
+         else {
+            shell( "$MGC2SP -a $fw -c $gm -m " . ( $ordr{'mgc'} - 1 ) . " -l 2048 -o 2 $mgc > $gendir/$base.sp" );
+         }
+
+         # convert band-aperiodicity to aperiodicity
+         shell( "$MGC2SP -a $fw -g 0 -m " . ( $ordr{'bap'} - 1 ) . " -l 2048 -o 0 $bap > $gendir/$base.ap" );
+
+         # synthesize waveform
+         open( SYN, ">$gendir/${base}.m" ) || die "Cannot open $!";
+         printf SYN "path(path,'%s');\n",                 ${STRAIGHT};
+         printf SYN "prm.spectralUpdateInterval = %f;\n", 1000.0 * $fs / $sr;
+         printf SYN "prm.levelNormalizationIndicator = 0;\n\n";
+         printf SYN "fprintf(1,'\\nSynthesizing %s\\n');\n", "$gendir/$base.wav";
+         printf SYN "fid1 = fopen('%s','r','%s');\n",        "$gendir/$base.sp", "ieee-le";
+         printf SYN "fid2 = fopen('%s','r','%s');\n",        "$gendir/$base.ap", "ieee-le";
+         printf SYN "fid3 = fopen('%s','r','%s');\n",        "$gendir/$base.f0", "ieee-le";
+         printf SYN "sp = fread(fid1,[%d, %d],'float');\n",  1025, $T;
+         printf SYN "ap = fread(fid2,[%d, %d],'float');\n",  1025, $T;
+         printf SYN "f0 = fread(fid3,[%d, %d],'float');\n",  1, $T;
+         printf SYN "fclose(fid1);\n";
+         printf SYN "fclose(fid2);\n";
+         printf SYN "fclose(fid3);\n";
+         printf SYN "sp = sp*(" . ( 1024.0 / ( 2200.0 * 32768.0 ) ) . ");\n";    # normalization for STRAIGHT (sdev of amplitude is set to 1024)
+         printf SYN "[sy] = exstraightsynth(f0,sp,ap,%d,prm);\n", $sr;
+         printf SYN "wavwrite( sy, %d, '%s');\n\n", $sr, "$gendir/$base.wav";
+         printf SYN "quit;\n";
+         close(SYN);
+         shell("$MATLAB < $gendir/${base}.m");
+
+         $line = "rm -f $gendir/$base.m";
+         shell($line);
+
    print "done\n";
+}
+   }
+}
+
+# sub routine for modulation spectrum-based postfilter
+sub postfiltering_mspf($$$) {
+   my ( $base, $gendir, $type ) = @_;
+   my ( $gentype, $T, $line, $d, @seq );
+
+   $gentype = $gendir;
+   $gentype =~ s/$prjdir\/gen\/qst$qnum\/ver$ver\/+/gen\//g;
+   $T = get_file_size("$gendir/$base.$type") / $ordr{$type} / 4;
+
+   # subtract utterance-level mean
+   $line = get_cmd_utmean( "$gendir/$base.$type", $type );
+   shell("$line > $gendir/$base.$type.mean");
+   $line = get_cmd_vopr( "$gendir/$base.$type", "-s", "$gendir/$base.$type.mean", $type );
+   shell("$line > $gendir/$base.$type.subtracted");
+
+   for ( $d = 0 ; $d < $ordr{$type} ; $d++ ) {
+
+      # calculate modulation spectrum/phase
+      $line = get_cmd_seq2ms( "$gendir/$base.$type.subtracted", $type, $d );
+      shell("$line > $gendir/$base.$type.mspec_dim$d");
+      $line = get_cmd_seq2mp( "$gendir/$base.$type.subtracted", $type, $d );
+      shell("$line > $gendir/$base.$type.mphase_dim$d");
+
+      # convert
+      $line = "cat $gendir/$base.$type.mspec_dim$d | ";
+      $line .= "$VOPR -l " . ( $mspfFFTLen / 2 + 1 ) . " -s $mspfmean{$type}{$gentype}[$d] | ";
+      $line .= "$VOPR -l " . ( $mspfFFTLen / 2 + 1 ) . " -d $mspfstdd{$type}{$gentype}[$d] | ";
+      $line .= "$VOPR -l " . ( $mspfFFTLen / 2 + 1 ) . " -m $mspfstdd{$type}{'nat'}[$d] | ";
+      $line .= "$VOPR -l " . ( $mspfFFTLen / 2 + 1 ) . " -a $mspfmean{$type}{'nat'}[$d] | ";
+
+      # apply weight
+      $line .= "$VOPR -l " . ( $mspfFFTLen / 2 + 1 ) . " -s $gendir/$base.$type.mspec_dim$d | ";
+      $line .= "$SOPR -m $mspfe{$type} | ";
+      $line .= "$VOPR -l " . ( $mspfFFTLen / 2 + 1 ) . " -a $gendir/$base.$type.mspec_dim$d > $gendir/$base.p_$type.mspec_dim$d";
+      shell($line);
+
+      # calculate filtered sequence
+      push( @seq, msmp2seq( "$gendir/$base.p_$type.mspec_dim$d", "$gendir/$base.$type.mphase_dim$d", $T ) );
+   }
+   open( SEQ, ">$gendir/$base.tmp" ) || die "Cannot open $!";
+   print SEQ join( "\n", @seq );
+   close(SEQ);
+   shell("$X2X +af $gendir/$base.tmp | $TRANSPOSE -m $ordr{$type} -n $T > $gendir/$base.p_$type.subtracted");
+
+   # add utterance-level mean
+   $line = get_cmd_vopr( "$gendir/$base.p_$type.subtracted", "-a", "$gendir/$base.$type.mean", $type );
+   shell("$line > $gendir/$base.p_$type");
+
+   # remove temporal files
+   shell("rm -f $gendir/$base.$type.mspec_dim* $gendir/$base.$type.mphase_dim* $gendir/$base.p_$type.mspec_dim*");
+   shell("rm -f $gendir/$base.$type.subtracted $gendir/$base.p_$type.subtracted $gendir/$base.$type.mean $gendir/$base.$type.tmp");
+}
+
+# sub routine for calculating temporal sequence from modulation spectrum/phase
+sub msmp2seq($$$) {
+   my ( $file_ms, $file_mp, $T ) = @_;
+   my ( @msp, @seq, @wseq, @ms, @mp, $d, $pos, $bias, $mspfShift );
+
+   @ms = split( /\n/, `$SOPR -EXP  $file_ms | $X2X +fa` );
+   @mp = split( /\n/, `$SOPR -m pi $file_mp | $X2X +fa` );
+   $mspfShift = ( $mspfLength - 1 ) / 2;
+
+   # ifft (modulation spectrum & modulation phase -> temporal sequence)
+   for ( $pos = 0, $bias = 0 ; $pos <= $#ms ; $pos += $mspfFFTLen / 2 + 1 ) {
+      for ( $d = 0 ; $d <= $mspfFFTLen / 2 ; $d++ ) {
+         $msp[ $d + $bias ] = $ms[ $d + $pos ] * cos( $mp[ $d + $pos ] );
+         $msp[ $d + $mspfFFTLen + $bias ] = $ms[ $d + $pos ] * sin( $mp[ $d + $pos ] );
+         if ( $d != 0 && $d != $mspfFFTLen / 2 ) {
+            $msp[ $mspfFFTLen - $d + $bias ] = $msp[ $d + $bias ];
+            $msp[ 2 * $mspfFFTLen - $d + $bias ] = -$msp[ $d + $mspfFFTLen + $bias ];
+         }
+      }
+      $bias += 2 * $mspfFFTLen;
+   }
+   open( MSP, ">$file_ms.tmp" ) || die "Cannot open $!";
+   print MSP join( "\n", @msp );
+   close(MSP);
+   @wseq = split( "\n", `$X2X +af $file_ms.tmp | $IFFTR -l $mspfFFTLen | $X2X +fa` );
+   shell("rm -f $file_ms.tmp");
+
+   # overlap-addition
+   for ( $pos = 0, $bias = 0 ; $pos <= $#wseq ; $pos += $mspfFFTLen ) {
+      for ( $d = 0 ; $d < $mspfFFTLen ; $d++ ) {
+         $seq[ $d + $bias ] += $wseq[ $d + $pos ];
+      }
+      $bias += $mspfShift;
+   }
+
+   return @seq[ $mspfShift .. ( $T + $mspfShift - 1 ) ];
+}
+
+# sub routine for shell command to get utterance mean
+sub get_cmd_utmean($$) {
+   my ( $file, $type ) = @_;
+
+   return "$VSTAT -l $ordr{$type} -o 1 < $file ";
+}
+
+# sub routine for shell command to subtract vector from sequence
+sub get_cmd_vopr($$$$) {
+   my ( $file, $opt, $vec, $type ) = @_;
+   my ( $value, $line );
+
+   if ( $ordr{$type} == 1 ) {
+      $value = `$X2X +fa < $vec`;
+      chomp($value);
+      $line = "$SOPR $opt $value < $file ";
+   }
+   else {
+      $line = "$VOPR -l $ordr{$type} $opt $vec < $file ";
+   }
+   return $line;
+}
+
+# sub routine for shell command to calculate modulation spectrum from sequence
+sub get_cmd_seq2ms($$$) {
+   my ( $file, $type, $d ) = @_;
+   my ( $T, $line, $mspfShift );
+
+   $T         = get_file_size("$file") / $ordr{$type} / 4;
+   $mspfShift = ( $mspfLength - 1 ) / 2;
+
+   $line = "$BCP -l $ordr{$type} -L 1 -s $d -e $d < $file | ";
+   $line .= "$WINDOW -l $T -L " . ( $T + $mspfShift ) . " -n 0 -w 5 | ";
+   $line .= "$FRAME -l $mspfLength -p $mspfShift | ";
+   $line .= "$WINDOW -l $mspfLength -L $mspfFFTLen -n 0 -w 3 | ";
+   $line .= "$SPEC -l $mspfFFTLen -o 1 -e 1e-30 ";
+
+   return $line;
+}
+
+# sub routine for shell command to calculate modulation phase from sequence
+sub get_cmd_seq2mp($$$) {
+   my ( $file, $type, $d ) = @_;
+   my ( $T, $line, $mspfShift );
+
+   $T         = get_file_size("$file") / $ordr{$type} / 4;
+   $mspfShift = ( $mspfLength - 1 ) / 2;
+
+   $line = "$BCP -l $ordr{$type} -L 1 -s $d -e $d < $file | ";
+   $line .= "$WINDOW -l $T -L " . ( $T + $mspfShift ) . " -n 0 -w 5 | ";
+   $line .= "$FRAME -l $mspfLength -p $mspfShift | ";
+   $line .= "$WINDOW -l $mspfLength -L $mspfFFTLen -n 0 -w 3 | ";
+   $line .= "$PHASE -l $mspfFFTLen -u ";
+
+   return $line;
+}
+
+# sub routine for making force-aligned label files
+sub make_full_fal() {
+   my ( $line, $base, $istr, $lstr, @iarr, @larr );
+
+   open( ISCP, "$scp{'trn'}" )   || die "Cannot open $!";
+   open( OSCP, ">$scp{'mspf'}" ) || die "Cannot open $!";
+
+   while (<ISCP>) {
+      $line = $_;
+      chomp($line);
+      $base = `basename $line .cmp`;
+      chomp($base);
+
+      open( LAB,  "$datdir/labels/full/$base.lab" ) || die "Cannot open $!";
+      open( IFAL, "$gvfaldir/$base.lab" )           || die "Cannot open $!";
+      open( OFAL, ">$mspffaldir/$base.lab" )        || die "Cannot open $!";
+
+      while ( ( $istr = <IFAL> ) && ( $lstr = <LAB> ) ) {
+         chomp($istr);
+         chomp($lstr);
+         @iarr = split( / /, $istr );
+         @larr = split( / /, $lstr );
+         print OFAL "$iarr[0] $iarr[1] $larr[$#larr]\n";
+      }
+
+      close(LAB);
+      close(IFAL);
+      close(OFAL);
+      print OSCP "$mspffaldir/$base.lab\n";
+   }
+
+   close(ISCP);
+   close(OSCP);
+}
+
+# sub routine for calculating statistics of modulation spectrum
+sub make_mspf($) {
+   my ($gentype) = @_;
+   my ( $cmp, $base, $type, $mspftype, $orgdir, $line, $d );
+   my ( $str, @arr, $start, $end, $find, $j );
+
+   # reset modulation spectrum files
+   foreach $type ('mgc') {
+      foreach $mspftype ( 'nat', $gentype ) {
+         for ( $d = 0 ; $d < $ordr{$type} ; $d++ ) {
+            shell("rm -f $mspfstatsdir{$mspftype}/${type}_dim$d.data");
+            shell("touch $mspfstatsdir{$mspftype}/${type}_dim$d.data");
+         }
+      }
+   }
+
+   # calculate modulation spectrum from natural/generated sequences
+   open( SCP, "$scp{'trn'}" ) || die "Cannot open $!";
+   while (<SCP>) {
+      $cmp = $_;
+      chomp($cmp);
+      $base = `basename $cmp .cmp`;
+      chomp($base);
+      print " Making data from $base.lab for modulation spectrum...";
+
+      foreach $type ('mgc') {
+         foreach $mspftype ( 'nat', $gentype ) {
+
+            # determine original feature directory
+            if   ( $mspftype eq 'nat' ) { $orgdir = "$datdir/$type"; }
+            else                        { $orgdir = "$mspfdir/$mspftype"; }
+
+            # subtract utterance-level mean
+            $line = get_cmd_utmean( "$orgdir/$base.$type", $type );
+            shell("$line > $mspfdatdir{$mspftype}/$base.$type.mean");
+            $line = get_cmd_vopr( "$orgdir/$base.$type", "-s", "$mspfdatdir{$mspftype}/$base.$type.mean", $type );
+            shell("$line > $mspfdatdir{$mspftype}/$base.$type.subtracted");
+
+            # extract non-silence frames
+            if ( @slnt > 0 ) {
+               shell("rm -f $mspfdatdir{$mspftype}/$base.$type.subtracted.no-sil");
+               shell("touch $mspfdatdir{$mspftype}/$base.$type.subtracted.no-sil");
+               open( F, "$gvfaldir/$base.lab" ) || die "Cannot open $!";
+               while ( $str = <F> ) {
+                  chomp($str);
+                  @arr = split( / /, $str );
+                  $find = 0;
+                  for ( $j = 0 ; $j < @slnt ; $j++ ) {
+                     if ( $arr[2] eq "$slnt[$j]" ) { $find = 1; last; }
+                  }
+                  if ( $find == 0 ) {
+                     $start = int( $arr[0] * ( 1.0e-7 / ( $fs / $sr ) ) );
+                     $end   = int( $arr[1] * ( 1.0e-7 / ( $fs / $sr ) ) );
+                     shell("$BCUT -s $start -e $end -l $ordr{$type} < $mspfdatdir{$mspftype}/$base.$type.subtracted >> $mspfdatdir{$mspftype}/$base.$type.subtracted.no-sil");
+                  }
+               }
+               close(F);
+            }
+            else {
+               shell("cp $mspfdatdir{$mspftype}/$base.$type.subtracted $mspfdatdir{$mspftype}/$base.$type.subtracted.no-sil");
+            }
+
+            # calculate modulation spectrum of each dimension
+            for ( $d = 0 ; $d < $ordr{$type} ; $d++ ) {
+               $line = get_cmd_seq2ms( "$mspfdatdir{$mspftype}/$base.$type.subtracted.no-sil", $type, $d );
+               shell("$line >> $mspfstatsdir{$mspftype}/${type}_dim$d.data");
+            }
+
+            # remove temporal files
+            shell("rm -f $mspfdatdir{$mspftype}/$base.$type.mean");
+            shell("rm -f $mspfdatdir{$mspftype}/$base.$type.subtracted.no-sil");
+         }
+      }
+      print "done\n";
+   }
+   close(SCP);
+
+   # estimate modulation spectrum statistics
+   foreach $type ('mgc') {
+      foreach $mspftype ( 'nat', $gentype ) {
+         for ( $d = 0 ; $d < $ordr{$type} ; $d++ ) {
+            shell( "$VSTAT -o 1 -l " . ( $mspfFFTLen / 2 + 1 ) . " -d $mspfstatsdir{$mspftype}/${type}_dim$d.data > $mspfmean{$type}{$mspftype}[$d]" );
+            shell( "$VSTAT -o 2 -l " . ( $mspfFFTLen / 2 + 1 ) . " -d $mspfstatsdir{$mspftype}/${type}_dim$d.data | $SOPR -SQRT > $mspfstdd{$type}{$mspftype}[$d]" );
+
+            # remove temporal files
+            shell("rm -f $mspfstatsdir{$mspftype}/${type}_dim$d.data");
+         }
+      }
+   }
 }
 
 ##################################################################################################
-

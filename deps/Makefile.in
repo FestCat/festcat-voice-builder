@@ -8,37 +8,37 @@ WGET = @WGET@
 # Festival:
 # =========
 # -- Download parameters--
-Festival_File = festival-2.3-current.tar.gz
-Festival_MD5 = 8ecc6bcef809a3a0019ecbd7ea320797
-Festival_URL = https://github.com/zeehio/festival/archive/upstream/2.3-current-2013-10-16.tar.gz
+Festival_File = festival-2.4-release.tar.gz
+Festival_MD5 = 49707d2f6744d5a67f81a96c36f7cb59
+Festival_URL = http://festvox.org/packed/festival/2.4/festival-2.4-release.tar.gz
 
 # Speech tools:
 # =========
 # -- Download parameters--
-SpeechTools_File = speech_tools-2.3-current.tar.gz
-SpeechTools_MD5 = 0fb4e725d25ea53125d2092657071fe3
-SpeechTools_URL = https://github.com/zeehio/speech-tools/archive/upstream/2.3-current-2013-10-16.tar.gz
+SpeechTools_File = speech_tools-2.4-release.tar.gz
+SpeechTools_MD5 = 3d60e563135363eb2548d947f7ef4e14
+SpeechTools_URL = http://festvox.org/packed/festival/2.4/speech_tools-2.4-release.tar.gz
 
 # SPTK:
 # =========
 # -- Download parameters--
-SPTK_File = SPTK-3.6.tar.gz
-SPTK_MD5 = 36300cabd58dd97ac1394aea5ab4fccb
-SPTK_URL = http://sourceforge.net/projects/sp-tk/files/SPTK/SPTK-3.6/SPTK-3.6.tar.gz/download
+SPTK_File = SPTK-3.8.tar.gz
+SPTK_MD5 = e9be206a0c06b37a15e2d921e6bad456
+SPTK_URL = http://sourceforge.net/projects/sp-tk/files/SPTK/SPTK-3.8/SPTK-3.8.tar.gz/download
 
 # hts_engine:
 # =========
 # -- Download parameters--
-htsengine_File = hts_engine_API-1.08.tar.gz
-htsengine_MD5 = c0bfe613eb18e5cd923d3a9809716c27
-htsengine_URL = http://sourceforge.net/projects/hts-engine/files/hts_engine%20API/hts_engine_API-1.08/hts_engine_API-1.08.tar.gz/download
+htsengine_File = hts_engine_API-1.09.tar.gz
+htsengine_MD5 = e5b280c43dbffafa37aeb8fdaeadae25
+htsengine_URL = http://sourceforge.net/projects/hts-engine/files/hts_engine%20API/hts_engine_API-1.09/hts_engine_API-1.09.tar.gz/download
 
 # HTS:
 # =========
 # -- Download parameters--
-HTS_File = HTS-2.3alpha_for_HTK-3.4.1.tar.bz2
-HTS_MD5 = 560f8fad439cf9066ce894dff1973123
-HTS_URL = http://hts.sp.nitech.ac.jp/archives/2.3alpha/HTS-2.3alpha_for_HTK-3.4.1.tar.bz2
+HTS_File = HTS-2.3beta_for_HTK-3.4.1.tar.bz2
+HTS_MD5 = 1d205f7904da260fbd35a2db1bcce5b4
+HTS_URL = http://hts.sp.nitech.ac.jp/archives/2.3beta/HTS-2.3beta_for_HTK-3.4.1.tar.bz2
 
 # HTK:
 # =========
@@ -119,7 +119,7 @@ configure_htsengine: download_htsengine
 		make install; \
 	fi
 
-# I am removing the need for ActiveTcl by installing libsnack and libx11-dev
+# I am removing the need for ActiveTcl by installing tcl-snack and libx11-dev
 # FIXME: Proper tests are required in configure.ac.
 configure_HTS: download_HTS download_HDecode download_HTS
 	if [ ! -f $(toolsdir)/bin/HHEd ]; then \
@@ -132,9 +132,9 @@ configure_HTS: download_HTS download_HDecode download_HTS
 		cp $(HTS_File) htspatch && \
 		cd htspatch && \
 		tar xjf $(HTS_File) && \
-		mv HTS-2.3alpha_for_HTK-3.4.1.patch ../hts && \
+		mv HTS-2.3beta_for_HTK-3.4.1.patch ../hts && \
 		cd ../hts && \
-		patch -p1 -d . < HTS-2.3alpha_for_HTK-3.4.1.patch && \
+		patch -p1 -d . < HTS-2.3beta_for_HTK-3.4.1.patch && \
 		./configure --enable-hdecode CFLAGS="-fopenmp" --prefix=$(toolsdir) && \
 		make all && \
 		make install; \

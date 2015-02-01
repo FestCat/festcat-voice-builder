@@ -21,19 +21,19 @@ Some dependencies are not installed automatically:
    - perl
    - csh
 
-2. I also needed the Debian package `libx11-dev` to build HTS. Sorry for not providing more details.
+2. I also needed the Debian package `libx11-dev` to build HTS and *maybe?* tcl-snack. Sorry for not providing more details.
 
 ## Language independent tools automatically downloaded, built and run
 
 The following software is not language specific and is downloaded to the `deps` directory, 
 compiled and installed automatically to the `tools` directory.
 
-1. [Speech Tools 2.3-current](http://tts.speech.cs.cmu.edu/awb/20131016/)
-2. [Festival 2.3-current](http://tts.speech.cs.cmu.edu/awb/20131016/)
-3. [SPTK 3.6](http://sourceforge.net/projects/sp-tk)
-4. [HTS-2.3alpha](http://hts.sp.nitech.ac.jp/) for [HTK-3.4.1](http://htk.eng.cam.ac.uk/) (downloading HTK requires a [user and password](http://htk.eng.cam.ac.uk/register.shtml), as well as agreeing to the [non-free license](http://htk.eng.cam.ac.uk/docs/license.shtml))
+1. [Speech Tools 2.4-release](http://tts.speech.cs.cmu.edu/awb/20131016/)
+2. [Festival 2.4-release](http://tts.speech.cs.cmu.edu/awb/20131016/)
+3. [SPTK 3.8](http://sourceforge.net/projects/sp-tk)
+4. [HTS-2.3beta](http://hts.sp.nitech.ac.jp/) for [HTK-3.4.1](http://htk.eng.cam.ac.uk/) (downloading HTK requires a [user and password](http://htk.eng.cam.ac.uk/register.shtml), as well as agreeing to the [non-free license](http://htk.eng.cam.ac.uk/docs/license.shtml))
 5. [HDecode 3.4.1](http://htk.eng.cam.ac.uk/) (it has similar restrictions to HTK)
-6. [hts_engine 1.08](http://sourceforge.net/projects/hts-engine)
+6. [hts_engine 1.09](http://sourceforge.net/projects/hts-engine)
 
 
 ## Language specific tools
@@ -54,8 +54,7 @@ This is downloaded automatically:
 
 # Usage
 
-Training Catalan voices may take several days, some GB of Hard disk and a lot of RAM,
-so bear in mind that "One does not simply... build an HTS voice".
+Training Catalan voices may take several days, some GB of Hard disk and a lot of RAM.
 
 In order to train the Catalan HTS voices, run:
 
