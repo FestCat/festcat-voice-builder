@@ -17,6 +17,15 @@ if test ! -f "$WGET"; then
 fi
 AC_SUBST(WGET)
 
+# sox
+AC_PATH_PROG([SOX], [sox], [/usr/bin], [$PATH:/usr/bin])
+if test ! -f "$SOX"; then
+	AC_MSG_ERROR(Can't find sox)
+fi
+AC_SUBST(SOX)
+
+
+
 # Checks for libraries.
 
 # Checks for header files.

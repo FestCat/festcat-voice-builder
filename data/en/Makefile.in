@@ -63,52 +63,54 @@ $(download_all):
 	$(WGET) --http-user=$($(subst download_,,$@)_USER) --http-password=$($(subst download_,,$@)_PASSWORD) --output-document=$($(subst download_,,$@)_File) $($(subst download_,,$@)_URL) )
 
 
-en_%.spk: en_%.download lang_en
-	if test ! -f $(workdir)/en_$*/configure.ac  -o  ! -d $(workdir)/en_$*/data/utts/  -o   ! -f $(workdir)/en_$*/data/utts/*.utt  ; then \
-		rm -rf $(workdir)/en_$* && mkdir -p $(workdir)/en_$* && \
-		cp -r $(datdir)/en/template/* $(workdir)/en_$*/ && \
-		for mytemplatescm in $$($(workdir)/en_$*/package/festvox/*SPEAKER*); do \
-		    mycustomscm=$${mytemplatescm//SPEAKER/$*} && \
-		    sed s/SPEAKER/$*/g < $$mytemplatescm > $$mycustomscm && \
+%.spk: %.download lang_en
+	$(eval SPK := $(word 1,$(subst _,$(space),$@)))
+	if test ! -f $(workdir)/$*/configure.ac  -o  ! -d $(workdir)/$*/data/utts/  -o   ! -f $(workdir)/$*/data/utts/*.utt  ; then \
+		rm -rf $(workdir)/$* && mkdir -p $(workdir)/$* && \
+		cp -r $(datdir)/en/template/* $(workdir)/$*/ && \
+		for mytemplatescm in $$($(workdir)/$*/package/festvox/*SPEAKER*); do \
+		    mycustomscm=$${mytemplatescm//SPEAKER/$(SPK)} && \
+		    sed s/SPEAKER/$(SPK)/g < $$mytemplatescm > $$mycustomscm && \
 		    rm $$mytemplatescm && \
 		fi && \
-		mkdir -p $(workdir)/en_$*/data/raw $(workdir)/en_$*/data/utts && \
-		if test  ! -d $(datdir)/en/en_$*/cmu_us_$*_arctic/   -o   ! -f $(datdir)/en/en_$*/cmu_us_$*_arctic/wav/*.wav  ; then \
-			tar xjf $(datdir)/en/en_$*/cmu_us_$*_arctic.tar.bz2 -C $(datdir)/en/en_$*; \
+		mkdir -p $(workdir)/$*/data/raw $(workdir)/$*/data/utts && \
+		if test  ! -d $(datdir)/en/$*/cmu_us_$(SPK)_arctic/   -o   ! -f $(datdir)/en/$*/cmu_us_$(SPK)_arctic/wav/*.wav  ; then \
+			tar xjf $(datdir)/en/$*/cmu_us_$(SPK)_arctic.tar.bz2 -C $(datdir)/en/$*; \
 		fi && \
-		for wavfile in $$($(datdir)/en/en_$*/cmu_us_$*_arctic/wav/*.wav); do \
+		for wavfile in $$($(datdir)/en/$*/cmu_us_$(SPK)_arctic/wav/*.wav); do \
 		    echo "Converting $$wavfile" && \
-		    rawfile="$(workdir)/en_$*/data/$$(basename $${wavfile%.*}).raw" && \
+		    rawfile="$(workdir)/$*/data/$$(basename $${wavfile%.*}).raw" && \
 		    $(SOX) "$$wavfile" -r 16000 -e signed-integer -b 16 "$$rawfile" && \
                 done && \
-		mv $(datdir)/en/en_$*/cmu_us_$*_arctic/wav/*.wav $(workdir)/$*/data/raw && \
-		$(RM) -rf $(datdir)/ca/$*/upc_$*_raw/ && \
-		mv $(datdir)/en/en_$*/cmu_us_$*_arctic/festival/utts/*.utt $(workdir)/en_$*/data/utts && \
-		$(RM) -rf $(datdir)/en/en_$*/cmu_us_$*_arctic/; \
+		mv $(datdir)/en/$*/cmu_us_$(SPK)_arctic/wav/*.wav $(workdir)/$(SPK)/data/raw && \
+		$(RM) -rf $(datdir)/ca/$(SPK)/upc_$(SPK)_raw/ && \
+		mv $(datdir)/en/$*/cmu_us_$(SPK)_arctic/festival/utts/*.utt $(workdir)/$*/data/utts && \
+		$(RM) -rf $(datdir)/en/$*/cmu_us_$(SPK)_arctic/; \
 	fi; \
-	cd $(workdir)/en_$* && \
-	. $(datdir)/en/speakerprop.sh $* && \
+	cd $(workdir)/$* && \
+	. $(datdir)/en/speakerprop.sh $(SPK) && \
 	./configure --with-fest-search-path=$(toolsdir)/festival/examples \
 		    --with-sptk-search-path=$(toolsdir)/bin \
 	            --with-hts-search-path=$(toolsdir)/bin  \
 	            --with-hts-engine-search-path=$(toolsdir)/bin \
-	            SPEAKER=$* && \
+	            SPEAKER=$(SPK) && \
 	$(MAKE) data && \
 	$(MAKE) voice && \
-	$(MAKE) cmu_us_$*_arctic_hts.tgz && \
+	$(MAKE) cmu_us_$(SPK)_arctic_hts.tgz && \
 	mkdir -p $(resultsdir) && \
-	cp $(workdir)/$*/upc_$*_arctic_hts.tgz $(resultsdir)
+	cp $(workdir)/$(SPK)/upc_$(SPK)_arctic_hts.tgz $(resultsdir)
 
 
-en_%.download: %.downutt %.downraw
-	mkdir -p "en_$*" && cd "en_$*" && \
-	[ -f "cmu_us_$*_arctic.tar.bz2" ] && echo "$* already downloaded" || \
-	if [ "x$*" = "xawb" ]; then \
+%.download: %.downutt %.downraw
+	$(eval SPK := $(word 1,$(subst _,$(space),$@)))
+	mkdir -p "$*" && cd "$*" && \
+	[ -f "cmu_us_$(SPK)_arctic.tar.bz2" ] && echo "$(SPK) already downloaded" || \
+	if [ "x$(SPK)" = "xawb" ]; then \
 	  version="0.90"; \
 	else \
 	  version="0.95"; \
 	fi && \
-	$(WGET) --output-document=cmu_us_$*_arctic.tar.bz2 http://www.speech.cs.cmu.edu/cmu_arctic/packed/cmu_us_$*_arctic-$$version-release.tar.bz2 
+	$(WGET) --output-document=cmu_us_$(SPK)_arctic.tar.bz2 http://www.speech.cs.cmu.edu/cmu_arctic/packed/cmu_us_$(SPK)_arctic-$$version-release.tar.bz2 
 
 
 clean:
