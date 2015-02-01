@@ -81,7 +81,7 @@ $(download_all):
 		    echo "Converting $$wavfile" && \
 		    rawfile="$(workdir)/$*/data/$$(basename $${wavfile%.*}).raw" && \
 		    $(SOX) "$$wavfile" -r 16000 -e signed-integer -b 16 "$$rawfile" && \
-                done && \
+		done && \
 		mv $(datdir)/en/$*/cmu_us_$(SPK)_arctic/wav/*.wav $(workdir)/$(SPK)/data/raw && \
 		$(RM) -rf $(datdir)/ca/$(SPK)/upc_$(SPK)_raw/ && \
 		mv $(datdir)/en/$*/cmu_us_$(SPK)_arctic/festival/utts/*.utt $(workdir)/$*/data/utts && \
@@ -101,7 +101,7 @@ $(download_all):
 	cp $(workdir)/$(SPK)/upc_$(SPK)_arctic_hts.tgz $(resultsdir)
 
 
-%.download: %.downutt %.downraw
+%.download:
 	$(eval SPK := $(word 1,$(subst _,$(space),$@)))
 	mkdir -p "$*" && cd "$*" && \
 	[ -f "cmu_us_$(SPK)_arctic.tar.bz2" ] && echo "$(SPK) already downloaded" || \
