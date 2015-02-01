@@ -1,29 +1,59 @@
 #!/usr/bin/make
 # @configure_input@
 
+depsdir = @PWD@/deps
 toolsdir = @PWD@/tools
 workdir = @WORKDIR@
 datdir = @PWD@/data
+resultsdir = @PWD@/results
+
+SOX = @SOX@
 
 WGET = @WGET@
 
+SPKNAMES = awb bdl clb jmk ksp rms slt
 
-# HTS demo:
-# =========
-# -- Download parameters --
-HTSDemo_File = HTS-demo_CMU-ARCTIC-SLT.tar.bz2
-HTSDemo_MD5  = 289d6bfbc98159d13ced7c9788e2a6c8
-HTSDemo_URL  = http://hts.sp.nitech.ac.jp/archives/2.3alpha/HTS-demo_CMU-ARCTIC-SLT.tar.bz2
+# festlex_cmu:
+festlex_cmu_File = festlex_CMU.tar.gz
+festlex_cmu_MD5 = 6a2ee4fed7c3ebedf197a3b8524ccb87
+festlex_cmu_URL = http://festvox.org/packed/festival/2.4/festlex_CMU.tar.gz
+
+# festlex_poslex:
+festlex_poslex_File = festlex_POSLEX.tar.gz
+festlex_poslex_MD5 = aa80f9250065b318325f16fdad3a4484
+festlex_poslex_URL = http://festvox.org/packed/festival/2.4/festlex_POSLEX.tar.gz
+
+# download links
 
 
-ALLDOWNLOADS = HTSDemo
-ALLCONFIGURES = HTSDemo
+ALLDOWNLOADS = festlex_cmu festlex_poslex
+ALLCONFIGURES = festlex_cmu festlex_poslex
 download_all = $(addprefix download_,$(ALLDOWNLOADS)) 
 configure_all = $(addprefix configure_,$(ALLCONFIGURES)) 
 
-all: lang_en
+.PHONY: all lang_en $(download_all) $(configure_all) %.spk
+
+all: lang_en en_slt.spk
+
 
 lang_en: $(download_all) $(configure_all)
+
+configure_festlex_cmu: download_festlex_cmu
+	mkdir -p festlex_cmu && \
+	tar xzf $(festlex_cmu_File) -C festlex_cmu --strip-components 1 && \
+	mkdir -p $(toolsdir)/festival/lib/dicts/cmu && \
+	cp festlex_cmu/lib/dicts/cmu/cmudict-0.4.out \
+	   festlex_cmu/lib/dicts/cmu/cmulex.scm \
+	   festlex_cmu/lib/dicts/cmu/cmu_lts_rules.scm \
+	   $(toolsdir)/festival/lib/dicts/cmu/
+
+configure_festlex_poslex: download_festlex_poslex
+	mkdir -p festlex_poslex && \
+	tar xzf $(festlex_poslex_File) -C festlex_poslex --strip-components 1 && \
+	mkdir -p $(toolsdir)/festival/lib/dicts && \
+	cp festlex_poslex/lib/dicts/wsj.wp39.poslexR \
+	   festlex_poslex/lib/dicts/wsj.wp39.tri.ngrambin \
+	   $(toolsdir)/festival/lib/dicts/
 
 # This target will check if the downloads are correct. If they are not
 # it will download them again, using a password if needed.
@@ -33,31 +63,57 @@ $(download_all):
 	$(WGET) --http-user=$($(subst download_,,$@)_USER) --http-password=$($(subst download_,,$@)_PASSWORD) --output-document=$($(subst download_,,$@)_File) $($(subst download_,,$@)_URL) )
 
 
-configure_HTSDemo: download_HTSDemo
-	mkdir -p template raw utts wav && \
-	mkdir -p utts/arctic-slt raw/arctic-slt && \
-	if [ ! -f template/configure.ac ] || [ ! -f raw/arctic-slt/cmu_us_arctic_slt_a0001.raw ] ; then \
-		tar xjf $(HTSDemo_File) && \
-		mv HTS-demo_CMU-ARCTIC-SLT/data/raw/*.raw raw/arctic-slt  && \
-		mv HTS-demo_CMU-ARCTIC-SLT/data/utts/*.utt utts/arctic-slt  && \
-		mv HTS-demo_CMU-ARCTIC-SLT/* template && \
-		rm -rf HTS-demo_CMU-ARCTIC-SLT; \
-	fi
-
-
-en_slt.spk: lang_en
-	if [ ! -f $(workdir)/en_slt/configure.ac ] || [ ! -f $(workdir)/en_slt/data/utts/cmu_us_arctic_slt_a0001.utt ]; then \
-		rm -rf $(workdir)/en_slt && \
-		mkdir -p $(workdir)/en_slt && \
-		cp -pr $(datdir)/en/template/* $(workdir)/en_slt/ && \
-		mkdir -p $(workdir)/en_slt/data/raw $(workdir)/en_slt/data/utts && \
-		cp $(datdir)/en/raw/arctic-slt/*.raw $(workdir)/en_slt/data/raw && \
-		cp $(datdir)/en/utts/arctic-slt/*.utt $(workdir)/en_slt/data/utts; \
+en_%.spk: en_%.download lang_en
+	if test ! -f $(workdir)/en_$*/configure.ac  -o  ! -d $(workdir)/en_$*/data/utts/  -o   ! -f $(workdir)/en_$*/data/utts/*.utt  ; then \
+		rm -rf $(workdir)/en_$* && mkdir -p $(workdir)/en_$* && \
+		cp -r $(datdir)/en/template/* $(workdir)/en_$*/ && \
+		for mytemplatescm in $$($(workdir)/en_$*/package/festvox/*SPEAKER*); do \
+		    mycustomscm=$${mytemplatescm//SPEAKER/$*} && \
+		    sed s/SPEAKER/$*/g < $$mytemplatescm > $$mycustomscm && \
+		    rm $$mytemplatescm && \
+		fi && \
+		mkdir -p $(workdir)/en_$*/data/raw $(workdir)/en_$*/data/utts && \
+		if test  ! -d $(datdir)/en/en_$*/cmu_us_$*_arctic/   -o   ! -f $(datdir)/en/en_$*/cmu_us_$*_arctic/wav/*.wav  ; then \
+			tar xjf $(datdir)/en/en_$*/cmu_us_$*_arctic.tar.bz2 -C $(datdir)/en/en_$*; \
+		fi && \
+		for wavfile in $$($(datdir)/en/en_$*/cmu_us_$*_arctic/wav/*.wav); do \
+		    echo "Converting $$wavfile" && \
+		    rawfile="$(workdir)/en_$*/data/$$(basename $${wavfile%.*}).raw" && \
+		    $(SOX) "$$wavfile" -r 16000 -e signed-integer -b 16 "$$rawfile" && \
+                done && \
+		mv $(datdir)/en/en_$*/cmu_us_$*_arctic/wav/*.wav $(workdir)/$*/data/raw && \
+		$(RM) -rf $(datdir)/ca/$*/upc_$*_raw/ && \
+		mv $(datdir)/en/en_$*/cmu_us_$*_arctic/festival/utts/*.utt $(workdir)/en_$*/data/utts && \
+		$(RM) -rf $(datdir)/en/en_$*/cmu_us_$*_arctic/; \
 	fi; \
-	cd $(workdir)/en_slt && \
+	cd $(workdir)/en_$* && \
+	. $(datdir)/en/speakerprop.sh $* && \
 	./configure --with-fest-search-path=$(toolsdir)/festival/examples \
 		    --with-sptk-search-path=$(toolsdir)/bin \
 	            --with-hts-search-path=$(toolsdir)/bin  \
-	            --with-hts-engine-search-path=$(toolsdir)/bin && \
+	            --with-hts-engine-search-path=$(toolsdir)/bin \
+	            SPEAKER=$* && \
 	$(MAKE) data && \
-	$(MAKE) voice
+	$(MAKE) voice && \
+	$(MAKE) cmu_us_$*_arctic_hts.tgz && \
+	mkdir -p $(resultsdir) && \
+	cp $(workdir)/$*/upc_$*_arctic_hts.tgz $(resultsdir)
+
+
+en_%.download: %.downutt %.downraw
+	mkdir -p "en_$*" && cd "en_$*" && \
+	[ -f "cmu_us_$*_arctic.tar.bz2" ] && echo "$* already downloaded" || \
+	if [ "x$*" = "xawb" ]; then \
+	  version="0.90"; \
+	else \
+	  version="0.95"; \
+	fi && \
+	$(WGET) --output-document=cmu_us_$*_arctic.tar.bz2 http://www.speech.cs.cmu.edu/cmu_arctic/packed/cmu_us_$*_arctic-$$version-release.tar.bz2 
+
+
+clean:
+	$(RM) -rf upc_ca_base $(upc_ca_base_File)
+	$(RM) -rf $(addprefix ca_,$(SPKNAMES))
+
+distclean: clean
+	$(RM) -rf Makefile

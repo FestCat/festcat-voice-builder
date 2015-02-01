@@ -26,12 +26,12 @@ INSTALL_DATA = @INSTALL_DATA@
 MKDIR_P = @MKDIR_P@
 
 
-DESTINATION = $(FESTDATADIR)/voices/catalan/$(VOICENAME)
+DESTINATION = $(FESTDATADIR)/voices/us/$(VOICENAME)
 
 all: install
 
 install:
 	$(MKDIR_P) $(DESTINATION)
-	cp -pr festvox hts $(DESTINATION)
+	$(INSTALL_DATA) festvox hts $(DESTINATION)
 
 .PHONY: all install
