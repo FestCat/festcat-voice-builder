@@ -72,22 +72,24 @@ $(download_all):
 		rm -rf $(workdir)/$* && mkdir -p $(workdir)/$* && \
 		cp -r $(datdir)/en/template/* $(workdir)/$*/ && \
 		for mytemplatescm in $$(ls $(workdir)/$*/package/festvox/*SPEAKER*); do \
-		    mycustomscm=$${mytemplatescm//SPEAKER/$(SPK)} && \
+		    mycustomscm=$$(echo $$mytemplatescm | sed s/SPEAKER/$(SPK)/g) && \
 		    sed s/SPEAKER/$(SPK)/g < $$mytemplatescm > $$mycustomscm && \
 		    rm $$mytemplatescm;  \
 		done; \
 		mkdir -p $(workdir)/$*/data/raw $(workdir)/$*/data/utts && \
-		if test  ! -d $(datdir)/en/$*/cmu_us_$(SPK)_arctic/   -o   ! -f $(datdir)/en/$*/cmu_us_$(SPK)_arctic/wav/*.wav  ; then \
+		if test  ! -d $(datdir)/en/$*/cmu_us_$(SPK)_arctic/   -o   ! -f $(datdir)/en/$*/cmu_us_$(SPK)_arctic/raw/*.raw  ; then \
 			tar xjf $(datdir)/en/$*/cmu_us_$(SPK)_arctic.tar.bz2 -C $(datdir)/en/$*; \
 		fi && \
+		mkdir -p "$(workdir)/$*/data/raw/" && \
 		for wavfile in $$(ls $(datdir)/en/$*/cmu_us_$(SPK)_arctic/wav/*.wav); do \
 		    echo "Converting $$wavfile" && \
-		    rawfile="$(workdir)/$*/data/$$(basename $${wavfile%.*}).raw" && \
+		    rawfile="$(workdir)/$*/data/raw/cmu_us_$(SPK)_$$(basename $${wavfile%.*}).raw" && \
 		    $(SOX) "$$wavfile" -r 16000 -e signed-integer -b 16 "$$rawfile";  \
 		done; \
-		mv $(datdir)/en/$*/cmu_us_$(SPK)_arctic/wav/*.wav $(workdir)/$(SPK)/data/raw && \
-		$(RM) -rf $(datdir)/ca/$(SPK)/upc_$(SPK)_raw/ && \
-		mv $(datdir)/en/$*/cmu_us_$(SPK)_arctic/festival/utts/*.utt $(workdir)/$*/data/utts && \
+		for uttsfile in $$(ls $(datdir)/en/$*/cmu_us_$(SPK)_arctic/festival/utts/*.utt); do \
+		    outfile="$(workdir)/$*/data/utts/cmu_us_$(SPK)_$$(basename $${uttsfile})" && \
+		    mv "$$uttsfile" "$$outfile" ; \
+		done; \
 		$(RM) -rf $(datdir)/en/$*/cmu_us_$(SPK)_arctic/; \
 	fi; \
 	cd $(workdir)/$* && \
@@ -101,7 +103,7 @@ $(download_all):
 	$(MAKE) voice && \
 	$(MAKE) cmu_us_$(SPK)_arctic_hts.tgz && \
 	mkdir -p $(resultsdir) && \
-	cp $(workdir)/$(SPK)/upc_$(SPK)_arctic_hts.tgz $(resultsdir)
+	cp $(workdir)/$(SPK)/cmu_us_$(SPK)_arctic_hts.tgz $(resultsdir)
 
 
 %.download:
