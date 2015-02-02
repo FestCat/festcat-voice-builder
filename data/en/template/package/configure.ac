@@ -60,6 +60,7 @@ if test ! -d "${FESTDATADIR}"; then
 fi
 echo "Festival data directory: ${FESTDATADIR} found."
 
+VOICENAME=!VOICENAME!
 
 AC_SUBST(FESTDATADIR)
 AC_SUBST(VOICENAME)

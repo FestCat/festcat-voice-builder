@@ -32,6 +32,6 @@ all: install
 
 install:
 	$(MKDIR_P) $(DESTINATION)
-	$(INSTALL_DATA) festvox hts $(DESTINATION)
+	cp -pr festvox hts $(DESTINATION)
 
 .PHONY: all install
