@@ -64,7 +64,7 @@ download_upc_ca_base:
 		fi && \
 		# Place the recordings in the working directory \
 		mv $(datdir)/ca/$*/upc_$*_raw/recordings/*.raw $(workdir)/$*/data/raw && \
-		# Clean up:
+		# Clean up: \
 		$(RM) -rf $(datdir)/ca/$*/upc_$*_raw/ && \
 		# Extract the utt files \
 		tar xjf $(datdir)/ca/$*/upc_$*_utt.tar.bz2 -C $(datdir)/ca/$*  && \
