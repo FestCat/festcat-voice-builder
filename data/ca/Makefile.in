@@ -1,6 +1,7 @@
 #!/usr/bin/make
 # @configure_input@
 
+# Basic needed directories.
 depsdir = @PWD@/deps
 toolsdir = @PWD@/tools
 workdir = @WORKDIR@
@@ -9,20 +10,24 @@ resultsdir = @PWD@/results
 
 WGET = @WGET@
 
+# Available speaker names in the FestCat dataset
 SPKNAMES = bet eli eva jan mar ona pau pep pol teo uri
 
-# upc_ca_base:
+# upc_ca_base: Filename, checksum and URL
 upc_ca_base_File = upc_ca_base-3.0.6-src.tgz
 upc_ca_base_MD5 = ae681cdf3bcae00bb8095123c9f58f7e
 upc_ca_base_URL = https://github.com/FestCat/festival-ca/archive/upstream/3.0.6.tar.gz
 
 .PHONY: all lang_ca ca_ona upc_ca_base %.spk
 
+# By default, let's build upc_ca_ona_hts.
 all: lang_ca ca_ona
 
-
+# To download and setup the catalan package. This alias is provided for
+# consistency with other languages
 lang_ca: upc_ca_base
 
+# Create directory, extract file, configure and install inside our Festival instance
 upc_ca_base: download_upc_ca_base
 	mkdir -p upc_ca_base && \
 	tar xzf $(upc_ca_base_File) -C upc_ca_base --strip-components 1 && \
@@ -30,7 +35,7 @@ upc_ca_base: download_upc_ca_base
 	./configure --enable-onlyinstall --enable-festivalpath=$(toolsdir)/festival/bin && \
 	$(MAKE) install
 
-
+# Download basic Catalan package
 download_upc_ca_base:
 	echo $@ && \
 	echo $(subst download_,,$@) && \
@@ -38,45 +43,67 @@ download_upc_ca_base:
 	( rm -f $($(subst download_,,$@)_File) && \
 	$(WGET) --output-document=$($(subst download_,,$@)_File) $($(subst download_,,$@)_URL) )
 
+# This sets up the working directory to be able to train the Festcat voice.
+# It also starts the required training and final voice package creation rules.
 %.spk: %.download lang_ca
+	# If the workdir is not properly setup:
 	if test ! -f $(workdir)/$*/configure.ac  -o  ! -d $(workdir)/$*/data/utts/  -o   ! -f $(workdir)/$*/data/utts/*.utt  ; then \
+		# delete the workdir and re-create it.
 		rm -rf $(workdir)/$* && mkdir -p $(workdir)/$* && \
+		# Copy over the template:
 		cp -r $(datdir)/ca/template/* $(workdir)/$*/ && \
+		# Customize the required festvox files
 		sed s/SPEAKER/$(subst ca_,,$*)/g < $(workdir)/$*/package/festvox/upc_ca_SPEAKER_hts.scm > $(workdir)/$*/package/festvox/upc_ca_$(subst ca_,,$*)_hts.scm && \
+		# Remove the copied but templated file:
 		rm $(workdir)/$*/package/festvox/upc_ca_SPEAKER_hts.scm && \
+		# Create a directory to store the raw and utt files
 		mkdir -p $(workdir)/$*/data/raw $(workdir)/$*/data/utts && \
+		# If we have not yet extracted the Festcat recordings, do it now:
 		if test  ! -d $(datdir)/ca/$*/upc_$*_raw/   -o   ! -f $(datdir)/ca/$*/upc_$*_raw/*.raw  ; then \
 			tar xjf $(datdir)/ca/$*/upc_$*_raw.tar.bz2 -C $(datdir)/ca/$*; \
 		fi && \
+		# Place the recordings in the working directory
 		mv $(datdir)/ca/$*/upc_$*_raw/recordings/*.raw $(workdir)/$*/data/raw && \
+		# Clean up:
 		$(RM) -rf $(datdir)/ca/$*/upc_$*_raw/ && \
+		# Extract the utt files
 		tar xjf $(datdir)/ca/$*/upc_$*_utt.tar.bz2 -C $(datdir)/ca/$*  && \
+		# Place the utt files in the working directory
 		mv $(datdir)/ca/$*/upc_$*_utt/utt/*.utt $(workdir)/$*/data/utts && \
+		# Clean up
 		$(RM) -rf $(datdir)/ca/$*/upc_$*_utt/; \
 	fi; \
+	# Now the workdir is ready, let's train the voice
 	cd $(workdir)/$* && \
+	# speakerprop.sh has some environment variables that are passed to the configure script
 	. $(datdir)/ca/speakerprop.sh $(subst ca_,,$*) && \
+	# The configure script will tell the training scripts where the tools are and will set up
+	# some properties of our speaker. This is strongly based on the HTS demo.
 	./configure --with-fest-search-path=$(toolsdir)/festival/examples \
 		    --with-sptk-search-path=$(toolsdir)/bin \
 	            --with-hts-search-path=$(toolsdir)/bin  \
 	            --with-hts-engine-search-path=$(toolsdir)/bin \
 	            SPEAKER=$(subst ca_,,$*) && \
+	# Data analysis and voice training, again this is based on the HTS demo
 	$(MAKE) data && \
 	$(MAKE) voice && \
+	# Prepare a tar.gz file with the final files needed by festival
 	$(MAKE) upc_$*_hts.tgz && \
+	# Copy this tar.gz file to the results directory
 	mkdir -p $(resultsdir) && \
 	cp $(workdir)/$*/upc_$*_hts.tgz $(resultsdir)
 
-
+# General rule to download a FestCat voice (download utt and raw)
 %.download: %.downutt %.downraw
 	echo ""
 
+# Rule to download a festcat utt dataset
 %.downutt:
 	mkdir -p "$*" && cd "$*" && \
 	[ -f "upc_$*_utt.tar.bz2" ] && echo "$* (utts) already downloaded" || \
 	$(WGET) --output-document=upc_$*_utt.tar.bz2 http://festcat.talp.cat/download/data/upc_$*_utt-1.0.tar.bz2 
 
-
+# Rule to download the raw audio files from a speaker in the festcat dataset
 %.downraw:
 	mkdir -p "$*" && cd "$*" && \
 	[ -f "upc_$*_raw.tar.bz2" ] && echo "$* (raw) already downloaded" || \

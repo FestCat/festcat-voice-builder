@@ -18,21 +18,33 @@ workdir = @WORKDIR@
 datdir = @PWD@/data
 resultsdir = @PWD@/results
 
+# Rule to create the different directories:
+# resultsdir: Holds the resulting .tar.gz package with the voice
+# toolsdir: where the tools are installed
+# workdir: where the intermediate files are generated
 $(resultsdir) $(toolsdir) $(workdir):
 	mkdir -p "$@"
 
+# Downloads and installs all the dependencies
 dependencies: $(toolsdir)
 	cd $(depsdir) && make all
 
-
+# Downloads and installs the language-specific tools
 lang_%: dependencies
 	cd $(datdir)/$* && make $@
 
-
+# This is a dirty kludge I need later.
+# Basically empty is empty and space is a space.
 empty:=
 space:= $(empty) $(empty)
 
+# Rule to train a voice. It basically is of the form
+# ${lang}_${spk}.spk. "make ca_ona.spk"
 %.spk: dependencies
+	# This next line: 
+	# 1. Replace "_" with " ": ca_ona.spk -> ca ona.spk
+	# 2. Get the first word: ca ona.spk -> ca
+	# So this is "cd data/ca && make ca_ona.spk"
 	echo $(word 1,$(subst _,$(space),$@))
 	cd $(datdir)/$(word 1,$(subst _,$(space),$@)) && \
 	$(MAKE) $@
@@ -43,11 +55,11 @@ clean:
 	$(RM) -rf deps/HDecode-3.4.1.tar.gz
 	$(RM) -rf deps/HTK-3.4.1.tar.gz
 	$(RM) -rf deps/HTS-2.2_for_HTK-3.4.1.tar.bz2
-	$(RM) -rf deps/SPTK-3.4.1.tar.gz
+	$(RM) -rf deps/SPTK*
 	$(RM) -rf deps/festival-*.tar.gz
-	$(RM) -rf deps/hts_engine_API-1.05.tar.gz
+	$(RM) -rf deps/hts_engine_API-1.*.tar.gz
 	$(RM) -rf deps/speech_tools-*.tar.gz
-	$(RM) -rf deps/SPTK-3.4.1 deps/hts deps/hts_engine_API-1.05
+	$(RM) -rf deps/hts deps/hts_engine_API-*
 	$(RM) -rf deps/htspatch
 	$(RM) -rf tools work
 

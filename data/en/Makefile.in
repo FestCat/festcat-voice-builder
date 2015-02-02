@@ -1,6 +1,7 @@
 #!/usr/bin/make
 # @configure_input@
 
+# Basic needed directories.
 depsdir = @PWD@/deps
 toolsdir = @PWD@/tools
 workdir = @WORKDIR@
@@ -26,11 +27,13 @@ festlex_poslex_URL = http://festvox.org/packed/festival/2.4/festlex_POSLEX.tar.g
 # download links
 
 
+# These variables are set up to ease my life later and download and install both the festlex_cmu and festlex_poslex easily
 ALLDOWNLOADS = festlex_cmu festlex_poslex
 ALLCONFIGURES = festlex_cmu festlex_poslex
 download_all = $(addprefix download_,$(ALLDOWNLOADS)) 
 configure_all = $(addprefix configure_,$(ALLCONFIGURES)) 
 
+# I need these two rules for manipulating spaces
 empty:=
 space:= $(empty) $(empty)
 
@@ -41,6 +44,7 @@ all: lang_en en_slt.spk
 
 lang_en: $(download_all) $(configure_all)
 
+# Installation of festlex_cmu
 configure_festlex_cmu: download_festlex_cmu
 	mkdir -p festlex_cmu && \
 	tar xzf $(festlex_cmu_File) -C festlex_cmu --strip-components 1 && \
@@ -50,6 +54,7 @@ configure_festlex_cmu: download_festlex_cmu
 	   festlex_cmu/lib/dicts/cmu/cmu_lts_rules.scm \
 	   $(toolsdir)/festival/lib/dicts/cmu/
 
+# and festlex_poslex
 configure_festlex_poslex: download_festlex_poslex
 	mkdir -p festlex_poslex && \
 	tar xzf $(festlex_poslex_File) -C festlex_poslex --strip-components 1 && \
@@ -59,28 +64,34 @@ configure_festlex_poslex: download_festlex_poslex
 	   $(toolsdir)/festival/lib/dicts/
 
 # This target will check if the downloads are correct. If they are not
-# it will download them again, using a password if needed.
+# it will download them again.
 $(download_all):
 	echo "$($(subst download_,,$@)_MD5)  $($(subst download_,,$@)_File)" | md5sum -c --status && echo "$(subst download_,,$@) already downloaded" || \
 	( rm -f $($(subst download_,,$@)_File) && \
-	$(WGET) --http-user=$($(subst download_,,$@)_USER) --http-password=$($(subst download_,,$@)_PASSWORD) --output-document=$($(subst download_,,$@)_File) $($(subst download_,,$@)_URL) )
+	$(WGET) --output-document=$($(subst download_,,$@)_File) $($(subst download_,,$@)_URL) )
 
-
+# This sets up the working directory to be able to train the ARCTIC voice.
+# It also starts the required training and final voice package creation rules.
 %.spk: %.download lang_en
 	$(eval SPK := $(word 2,$(subst _,$(space),$*)))
+	# If the workdir is not properly setup:
 	if test ! -f $(workdir)/$*/configure.ac  -o  ! -d $(workdir)/$*/data/utts/  -o   ! -f $(workdir)/$*/data/utts/*.utt  ; then \
+		# delete the workdir and re-create it.
 		rm -rf $(workdir)/$* && mkdir -p $(workdir)/$* && \
 		cp -r $(datdir)/en/template/* $(workdir)/$*/ && \
+		# Customize the required festvox files:
 		for mytemplatescm in $$(ls $(workdir)/$*/package/festvox/*SPEAKER*); do \
 		    mycustomscm=$$(echo $$mytemplatescm | sed s/SPEAKER/$(SPK)/g) && \
 		    sed s/SPEAKER/$(SPK)/g < $$mytemplatescm > $$mycustomscm && \
 		    rm $$mytemplatescm;  \
 		done; \
+		# Create a directory to store the raw and utt files
 		mkdir -p $(workdir)/$*/data/raw $(workdir)/$*/data/utts && \
 		if test  ! -d $(datdir)/en/$*/cmu_us_$(SPK)_arctic/   -o   ! -f $(datdir)/en/$*/cmu_us_$(SPK)_arctic/raw/*.raw  ; then \
 			tar xjf $(datdir)/en/$*/cmu_us_$(SPK)_arctic.tar.bz2 -C $(datdir)/en/$*; \
 		fi && \
 		mkdir -p "$(workdir)/$*/data/raw/" && \
+		# Convert using sox the wav files to raw files
 		for wavfile in $$(ls $(datdir)/en/$*/cmu_us_$(SPK)_arctic/wav/*.wav); do \
 		    echo "Converting $$wavfile" && \
 		    rawfile="$(workdir)/$*/data/raw/cmu_us_$(SPK)_$$(basename $${wavfile%.*}).raw" && \
@@ -92,16 +103,23 @@ $(download_all):
 		done; \
 		$(RM) -rf $(datdir)/en/$*/cmu_us_$(SPK)_arctic/; \
 	fi; \
+	# Now the workdir is ready, let's train the voice
 	cd $(workdir)/$* && \
+	# speakerprop.sh has some environment variables that are passed to the configure script
 	. $(datdir)/en/speakerprop.sh $(SPK) && \
+	# The configure script will tell the training scripts where the tools are and will set up
+	# some properties of our speaker. This is strongly based on the HTS demo.
 	./configure --with-fest-search-path=$(toolsdir)/festival/examples \
 		    --with-sptk-search-path=$(toolsdir)/bin \
 	            --with-hts-search-path=$(toolsdir)/bin  \
 	            --with-hts-engine-search-path=$(toolsdir)/bin \
 	            SPEAKER=$(SPK) && \
+	# Data analysis and voice training, again this is based on the HTS demo
 	$(MAKE) data && \
 	$(MAKE) voice && \
+	# Prepare a tar.gz file with the final files needed by festival
 	$(MAKE) cmu_us_$(SPK)_arctic_hts.tgz && \
+	# Copy this tar.gz file to the results directory
 	mkdir -p $(resultsdir) && \
 	cp $(workdir)/$(SPK)/cmu_us_$(SPK)_arctic_hts.tgz $(resultsdir)
 

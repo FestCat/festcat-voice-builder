@@ -120,7 +120,7 @@ configure_htsengine: download_htsengine
 	fi
 
 # I am removing the need for ActiveTcl by installing tcl-snack and libx11-dev
-# FIXME: Proper tests are required in configure.ac.
+# FIXME: Proper tests are required in configure.ac. Are these packages still needed?
 configure_HTS: download_HTS download_HDecode download_HTS
 	if [ ! -f $(toolsdir)/bin/HHEd ]; then \
 		rm -rf hts htspatch && \
