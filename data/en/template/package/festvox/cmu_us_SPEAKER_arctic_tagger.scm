@@ -43,6 +43,8 @@ Set up the POS tagger English."
   (set! pos_lex_name "english_poslex")
   (set! pos_ngram_name 'english_pos_ngram)
   (set! pos_supported t)
+  (set! pos_p_start_tag "punc")
+  (set! pos_pp_start_tag "nn")
   (set! guess_pos english_guess_pos)   ;; need this for accents
 )
 

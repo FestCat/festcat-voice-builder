@@ -40,7 +40,7 @@
 (define (cmu_us_SPEAKER_arctic::select_phrasing)
   "(cmu_us_SPEAKER_arctic::select_phrasing)
 Set up the phrasing module for English."
-  (Parameter.set 'Phrase_Method 'prob_models)
+  (Param.set 'Phrase_Method 'prob_models)
   (set! phr_break_params english_phr_break_params)
 )
 

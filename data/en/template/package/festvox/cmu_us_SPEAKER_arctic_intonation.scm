@@ -42,7 +42,7 @@
 Set up intonation for English."
   (set! int_tone_cart_tree f2b_int_tone_cart_tree)
   (set! int_accent_cart_tree f2b_int_accent_cart_tree)
-  (Parameter.set 'Int_Method Intonation_Tree)
+  (Param.set 'Int_Method Intonation_Tree)
 )
 
 (define (cmu_us_SPEAKER_arctic::reset_intonation)

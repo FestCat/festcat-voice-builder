@@ -51,7 +51,7 @@ of words that expand given token with name."
 (define (cmu_us_SPEAKER_arctic::select_tokenizer)
   "(cmu_us_SPEAKER_arctic::select_tokenizer)
 Set up tokenizer for US English."
-  (Parameter.set 'Language 'americanenglish)
+  (Param.set 'Language 'americanenglish)
 
   (set! token_to_words cmu_us_SPEAKER_arctic::token_to_words)
 )

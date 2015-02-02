@@ -147,7 +147,7 @@ Define voice for limited domain: us."
   ;; Waveform synthesis model: hts
   (set! hts_engine_params cmu_us_SPEAKER_arctic_hts::hts_engine_params)
   (set! hts_feats_list cmu_us_SPEAKER_arctic_hts::hts_feats_list)
-  (Parameter.set 'Synth_Method 'HTS)
+  (Param.set 'Synth_Method 'HTS)
 
   ;; This is where you can modify power (and sampling rate) if desired
   (set! after_synth_hooks nil)

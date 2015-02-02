@@ -40,7 +40,7 @@
 (define (cmu_us_SPEAKER_arctic::select_phoneset)
   "(cmu_us_SPEAKER_arctic::select_phoneset)
 Set up phone set for US English."
-  (Parameter.set 'PhoneSet 'radio)
+  (Param.set 'PhoneSet 'radio)
   (PhoneSet.select 'radio)
 )
 

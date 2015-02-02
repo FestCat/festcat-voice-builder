@@ -53,7 +53,7 @@ Set up the F0 model for English."
   (set! f0_lr_mid f2b_f0_lr_mid)
   (set! f0_lr_end f2b_f0_lr_end)
   (set! int_lr_params cmu_us_SPEAKER_arctic_int_lr_params)
-  (Parameter.set 'Int_Target_Method Int_Targets_LR)
+  (Param.set 'Int_Target_Method Int_Targets_LR)
 )
 
 (define (cmu_us_SPEAKER_arctic::reset_f0model)

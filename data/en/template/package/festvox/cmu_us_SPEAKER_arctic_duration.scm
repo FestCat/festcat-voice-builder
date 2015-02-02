@@ -42,8 +42,8 @@
 Set up duration for English."
   (set! duration_cart_tree cmu_us_SPEAKER_arctic::zdur_tree)
   (set! duration_ph_info cmu_us_SPEAKER_arctic::phone_durs)
-  (Parameter.set 'Duration_Method 'Tree_ZScores)
-  (Parameter.set 'Duration_Stretch 1.0)
+  (Param.set 'Duration_Method 'Tree_ZScores)
+  (Param.set 'Duration_Stretch 1.0)
 )
 
 (define (cmu_us_SPEAKER_arctic::reset_duration)
