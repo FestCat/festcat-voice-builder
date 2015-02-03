@@ -121,7 +121,7 @@ $(download_all):
 	$(MAKE) cmu_us_$(SPK)_arctic_hts.tgz && \
 	# Copy this tar.gz file to the results directory \
 	mkdir -p $(resultsdir) && \
-	cp $(workdir)/$(SPK)/cmu_us_$(SPK)_arctic_hts.tgz $(resultsdir)
+	cp $(workdir)/$*/cmu_us_$(SPK)_arctic_hts.tgz $(resultsdir)
 
 
 %.download:
