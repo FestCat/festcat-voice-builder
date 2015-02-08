@@ -1184,6 +1184,9 @@ sub make_data_gv {
       shell("rm -f $gvdatdir/tmp.cmp");
       shell("touch $gvdatdir/tmp.cmp");
       $i = 0;
+      if (! -e "$gvfaldir/$base.lab") {
+          next;
+      }
 
       foreach $type (@cmp) {
          if ( $nosilgv && @slnt > 0 ) {
