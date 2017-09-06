@@ -34,9 +34,17 @@ AC_SUBST(SOX)
 AC_TYPE_SIZE_T
 
 AC_ARG_VAR(htk_user,AS_HELP_STRING([htk_user=USERNAME],[specify the HTK website user name]))
+
+if test "x${htk_user}" = "x" ; then
+   AC_MSG_ERROR([htk_user=USERNAME environment variable not set])
+fi
 AC_SUBST([htk_user])
 
+
 AC_ARG_VAR(htk_password,AS_HELP_STRING([htk_password=PASSWORD],[specify the HTK website password]))
+if test "x${htk_password}" = "x" ; then
+   AC_MSG_ERROR([htk_password=PASSWORD environment variable not set])
+fi
 AC_SUBST([htk_password])
 
 AC_SUBST(PWD)
