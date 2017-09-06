@@ -54,7 +54,7 @@ clean:
 	(cd $(datdir)/ca/ && make clean)
 	$(RM) -rf deps/HDecode-3.4.1.tar.gz
 	$(RM) -rf deps/HTK-3.4.1.tar.gz
-	$(RM) -rf deps/HTS-2.2_for_HTK-3.4.1.tar.bz2
+	$(RM) -rf deps/HTS-2.3_for_HTK-3.4.1.tar.bz2
 	$(RM) -rf deps/SPTK*
 	$(RM) -rf deps/festival-*.tar.gz
 	$(RM) -rf deps/hts_engine_API-1.*.tar.gz

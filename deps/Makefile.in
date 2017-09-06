@@ -22,23 +22,23 @@ SpeechTools_URL = http://festvox.org/packed/festival/2.4/speech_tools-2.4-releas
 # SPTK:
 # =========
 # -- Download parameters--
-SPTK_File = SPTK-3.8.tar.gz
-SPTK_MD5 = e9be206a0c06b37a15e2d921e6bad456
-SPTK_URL = http://sourceforge.net/projects/sp-tk/files/SPTK/SPTK-3.8/SPTK-3.8.tar.gz/download
+SPTK_File = SPTK-3.10.tar.gz
+SPTK_MD5 = 96f879c97340f5d85f33b32a47d16e1b
+SPTK_URL = http://sourceforge.net/projects/sp-tk/files/SPTK/SPTK-3.10/SPTK-3.10.tar.gz/download
 
 # hts_engine:
 # =========
 # -- Download parameters--
-htsengine_File = hts_engine_API-1.09.tar.gz
-htsengine_MD5 = e5b280c43dbffafa37aeb8fdaeadae25
-htsengine_URL = http://sourceforge.net/projects/hts-engine/files/hts_engine%20API/hts_engine_API-1.09/hts_engine_API-1.09.tar.gz/download
+htsengine_File = hts_engine_API-1.10.tar.gz
+htsengine_MD5 = 5626d1e2522659e93fb295f0b42339f5
+htsengine_URL = http://sourceforge.net/projects/hts-engine/files/hts_engine%20API/hts_engine_API-1.10/hts_engine_API-1.10.tar.gz/download
 
 # HTS:
 # =========
 # -- Download parameters--
-HTS_File = HTS-2.3beta_for_HTK-3.4.1.tar.bz2
-HTS_MD5 = 1d205f7904da260fbd35a2db1bcce5b4
-HTS_URL = http://hts.sp.nitech.ac.jp/archives/2.3beta/HTS-2.3beta_for_HTK-3.4.1.tar.bz2
+HTS_File = HTS-2.3_for_HTK-3.4.1.tar.bz2
+HTS_MD5 = cb8e68a2ea2320b0e8fb519f86fa429d
+HTS_URL = http://hts.sp.nitech.ac.jp/archives/2.3/HTS-2.3_for_HTK-3.4.1.tar.bz2
 
 # HTK:
 # =========
@@ -132,9 +132,9 @@ configure_HTS: download_HTS download_HDecode download_HTS
 		cp $(HTS_File) htspatch && \
 		cd htspatch && \
 		tar xjf $(HTS_File) && \
-		mv HTS-2.3beta_for_HTK-3.4.1.patch ../hts && \
+		mv HTS-2.3_for_HTK-3.4.1.patch ../hts && \
 		cd ../hts && \
-		patch -p1 -d . < HTS-2.3beta_for_HTK-3.4.1.patch && \
+		patch -p1 -d . < HTS-2.3_for_HTK-3.4.1.patch && \
 		./configure --enable-hdecode CFLAGS="-fopenmp" --prefix=$(toolsdir) && \
 		make all && \
 		make install; \
