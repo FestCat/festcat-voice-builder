@@ -107,7 +107,7 @@ Reset global variables back to previous voice."
 )
 
 (set! upc_ca_SPEAKER_hts::hts_feats_list
-      (load (path-append hts_data_dir "label.feats") t))
+      (load (path-append hts_data_dir "feat.list") t))
 
 (set! upc_ca_SPEAKER_hts::hts_engine_params
       (list
