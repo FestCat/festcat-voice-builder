@@ -27,3 +27,16 @@ elif test "$1" = "bdl" -o \
    export LOWERF0="40";
    export UPPERF0="280";
 fi
+
+if test "$1" = "awb"; then
+   export DIALECT="scottish";
+elif test "$1" = "ksp"; then
+   export DIALECT="indian";
+elif test "$1" = "bdl" -o \
+        "$1" = "slt" -o \
+        "$1" = "jmk" -o \
+        "$1" = "rms" -o \
+        "$1" = "clb"; then
+   export DIALECT="american";
+fi
+

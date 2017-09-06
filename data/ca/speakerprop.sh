@@ -4,9 +4,9 @@
 export SPEAKER="$1";
 export DATASET="upc_ca";
 export VER=1;
-export QNUM=002;
+export QNAME="ca.talk";
 export IDIOMA="ca";
-
+export DIALECT="central";
 
 if test "$1" = "bet" -o \
         "$1" = "eli" -o \

@@ -7,6 +7,8 @@ toolsdir = @PWD@/tools
 workdir = @WORKDIR@
 datdir = @PWD@/data
 resultsdir = @PWD@/results
+LANG = "en"
+DATASET = "cmu_us"
 
 SOX = @SOX@
 
@@ -74,39 +76,51 @@ $(download_all):
 # It also starts the required training and final voice package creation rules.
 %.spk: %.download lang_en
 	$(eval SPK := $(word 2,$(subst _,$(space),$*)))
+	# speakerprop.sh has some environment variables that are passed to the configure script \
+	. $(datdir)/$(LANG)/speakerprop.sh $(SPK) && \
 	# If the workdir is not properly setup: \
-	if test ! -f $(workdir)/$*/configure.ac  -o  ! -d $(workdir)/$*/data/utts/  -o   ! -f $(workdir)/$*/data/utts/*.utt  ; then \
+	if test ! -f $(workdir)/$*/hts/configure.ac  -o  ! -d $(workdir)/$*/hts/data/utts/  -o   ! -f $(workdir)/$*/hts/data/utts/*.utt  ; then \
 		# delete the workdir and re-create it. \
 		rm -rf $(workdir)/$* && mkdir -p $(workdir)/$* && \
-		cp -r $(datdir)/en/template/* $(workdir)/$*/ && \
+		# Copy the language generic and language specific hts demo files: \
+		mkdir -p $(workdir)/$*/hts && \
+		cp -r $(datdir)/template_hts/* $(workdir)/$*/hts && \
+		cp -r $(datdir)/$(LANG)/template_hts/* $(workdir)/$*/hts && \
+		# Copy the language generic and language specific packaging files: \
+		mkdir -p $(workdir)/$*/pkg && \
+		cp -r $(datdir)/template_package/* $(workdir)/$*/pkg && \
+		# Copy over the catalan specific template: \
+		cp -r $(datdir)/$(LANG)/template_package/* $(workdir)/$*/pkg && \
 		# Customize the required festvox files: \
-		for mytemplatescm in $$(ls $(workdir)/$*/package/festvox/*SPEAKER*); do \
+		for mytemplatescm in $$(ls $(workdir)/$*/pkg/skeleton/festvox/*SPEAKER*); do \
 		    mycustomscm=$$(echo $$mytemplatescm | sed s/SPEAKER/$(SPK)/g) && \
-		    sed s/SPEAKER/$(SPK)/g < $$mytemplatescm > $$mycustomscm && \
+		    sed -e s/SPEAKER/$(SPK)/g -e s/GENDER/$${GENDER}/g -e s/DIALECT/$${DIALECT}/g < $$mytemplatescm > $$mycustomscm && \
 		    rm $$mytemplatescm;  \
 		done; \
 		# Create a directory to store the raw and utt files \
-		mkdir -p $(workdir)/$*/data/raw $(workdir)/$*/data/utts && \
-		if test  ! -d $(datdir)/en/$*/cmu_us_$(SPK)_arctic/   -o   ! -f $(datdir)/en/$*/cmu_us_$(SPK)_arctic/raw/*.raw  ; then \
-			tar xjf $(datdir)/en/$*/cmu_us_$(SPK)_arctic.tar.bz2 -C $(datdir)/en/$*; \
+		mkdir -p $(workdir)/$*/hts/data/raw $(workdir)/$*/hts/data/utts && \
+		if test  ! -d $(datdir)/$(LANG)/$*/$(DATASET)_$(SPK)_arctic/   -o   ! -f $(datdir)/$(LANG)/$*/$(DATASET)_$(SPK)_arctic/raw/*.raw  ; then \
+			tar xjf $(datdir)/$(LANG)/$*/$(DATASET)_$(SPK)_arctic.tar.bz2 -C $(datdir)/$(LANG)/$*/; \
 		fi && \
-		mkdir -p "$(workdir)/$*/data/raw/" && \
+		mkdir -p "$(workdir)/$*/hts/data/raw/" && \
 		# Convert using sox the wav files to raw files \
-		for wavfile in $$(ls $(datdir)/en/$*/cmu_us_$(SPK)_arctic/wav/*.wav); do \
+		for wavfile in $$(ls $(datdir)/$(LANG)/$*/$(DATASET)_$(SPK)_arctic/wav/*.wav); do \
 		    echo "Converting $$wavfile" && \
-		    rawfile="$(workdir)/$*/data/raw/cmu_us_$(SPK)_$$(basename $${wavfile%.*}).raw" && \
+		    NAME_WITHOUT_WAV=$$(basename $${wavfile%.*}) && \
+		    NAME_WITHOUT_ARCTIC=$${NAME_WITHOUT_WAV#arctic_*} && \
+		    rawfile="$(workdir)/$*/hts/data/raw/$(DATASET)_$(SPK)_$${NAME_WITHOUT_ARCTIC}.raw" && \
 		    $(SOX) "$$wavfile" -r 16000 -e signed-integer -b 16 "$$rawfile";  \
 		done; \
-		for uttsfile in $$(ls $(datdir)/en/$*/cmu_us_$(SPK)_arctic/festival/utts/*.utt); do \
-		    outfile="$(workdir)/$*/data/utts/cmu_us_$(SPK)_$$(basename $${uttsfile})" && \
+		for uttsfile in $$(ls $(datdir)/$(LANG)/$*/$(DATASET)_$(SPK)_arctic/festival/utts/*.utt); do \
+		    UTTBASENAME="$$(basename $${uttsfile})" && \
+		    UTTBASENAME="$${UTTBASENAME#arctic_*}" && \
+		    outfile="$(workdir)/$*/hts/data/utts/$(DATASET)_$(SPK)_$${UTTBASENAME}" && \
 		    mv "$$uttsfile" "$$outfile" ; \
 		done; \
-		$(RM) -rf $(datdir)/en/$*/cmu_us_$(SPK)_arctic/; \
+		$(RM) -rf $(datdir)/$(LANG)/$*/$(DATASET)_$(SPK)_arctic/; \
 	fi; \
 	# Now the workdir is ready, let's train the voice \
-	cd $(workdir)/$* && \
-	# speakerprop.sh has some environment variables that are passed to the configure script \
-	. $(datdir)/en/speakerprop.sh $(SPK) && \
+	( cd $(workdir)/$*/hts && \
 	# The configure script will tell the training scripts where the tools are and will set up \
 	# some properties of our speaker. This is strongly based on the HTS demo. \
 	./configure --with-fest-search-path=$(toolsdir)/festival/examples \
@@ -116,12 +130,14 @@ $(download_all):
 	            SPEAKER=$(SPK) && \
 	# Data analysis and voice training, again this is based on the HTS demo \
 	$(MAKE) data && \
-	$(MAKE) voice && \
+	$(MAKE) voice ) && \
+	( cd $(workdir)/$*/pkg && \
 	# Prepare a tar.gz file with the final files needed by festival \
-	$(MAKE) cmu_us_$(SPK)_arctic_hts.tgz && \
+	sed -e s/@SPEAKER@/$${SPEAKER}/g -e s/@DATASET@/$${DATASET}/g < Makefile.in > Makefile \
+	$(MAKE) $(DATASET)_$(SPK)_hts.tgz && \
 	# Copy this tar.gz file to the results directory \
 	mkdir -p $(resultsdir) && \
-	cp $(workdir)/$*/cmu_us_$(SPK)_arctic_hts.tgz $(resultsdir)
+	cp $(workdir)/$*/$(DATASET)_$(SPK)_hts.tgz $(resultsdir) ) || exit 1
 
 
 %.download:
