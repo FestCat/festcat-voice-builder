@@ -1,6 +1,6 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(HTS-demo_CMU-ARCTIC-SLT, 2.3 beta, hts-users@sp.nitech.ac.jp)
-AC_COPYRIGHT(Copyright 2001-2014 Nagoya Institute of Technology)
+AC_INIT(HTS-demo_CMU-ARCTIC-SLT, 2.3, hts-users@sp.nitech.ac.jp)
+AC_COPYRIGHT(Copyright 2001-2016 Nagoya Institute of Technology)
 AC_COPYRIGHT(Copyright 2001-2008 Tokyo Institute of Technology)
 
 
@@ -14,6 +14,19 @@ AC_PATH_PROG([PERL], [perl], [/usr/bin], [$PATH:/usr/bin])
 if test ! -f "$PERL"; then
 	AC_MSG_ERROR(Can't find perl)
 fi
+
+# python
+AC_PATH_PROG([PYTHON], [python], [/usr/bin], [$PATH:/usr/bin])
+if test ! -f "$PYTHON"; then
+	if test -z "$USEDNN"; then
+		:
+	elif test $USEDNN -ne 1; then
+		:
+	else
+		AC_MSG_ERROR(Can't find python)
+	fi
+fi
+PYTHON="$PYTHON -u -B"
 
 # wc
 AC_PATH_PROG([WC], [wc], [/usr/bin], [$PATH:/usr/bin])
@@ -253,6 +266,12 @@ if test ! -f "$IFFTR"; then
 	AC_MSG_ERROR(Can't find ifftr of SPTK)
 fi
 
+# mlpg
+AC_PATH_PROG([MLPG], [mlpg], [:], [${sptk_search_path}:$PATH])
+if test ! -f "$MLPG"; then
+	AC_MSG_ERROR(Can't find mlpg of SPTK)
+fi
+
 
 
 # MATLAB
@@ -376,7 +395,7 @@ AC_ARG_WITH(hts-engine-search-path,
 AC_PATH_PROG([ENGINE], [hts_engine], [:], [${hts_engine_search_path}:$PATH])
 if test ! -f "$ENGINE"; then
 	if test -z "$USESTRAIGHT"; then
-	AC_MSG_ERROR(Can't find hts_engine)
+		AC_MSG_ERROR(Can't find hts_engine)
 	elif test $USESTRAIGHT -ne 1; then
 		AC_MSG_ERROR(Can't find hts_engine)
 	else
@@ -422,18 +441,18 @@ AC_SUBST(SPEAKER)
 
 # version number and question set name
 AC_ARG_VAR([VER],[version number of this setting (default=1)])
-AC_ARG_VAR([QNUM],[question set number (default='001')])
+AC_ARG_VAR([QNAME],[question set name (default=en_US.talk)])
 
 if test -z "$VER"; then
 	VER=1
 fi
 
-if test -z "$QNUM"; then
-	QNUM='001'
+if test -z "$QNAME"; then
+	QNAME=en_US.talk
 fi
 
 AC_SUBST(VER)
-AC_SUBST(QNUM)
+AC_SUBST(QNAME)
 
 
 
@@ -488,12 +507,24 @@ if test -z "$NORMALIZE"; then
 	NORMALIZE=1
 fi
 
-if test -z "$FFTLEN"; then
-	FFTLEN=2048
-fi
-
 if test -z "$SAMPFREQ"; then
 	SAMPFREQ=48000
+fi
+
+if test "$USESTRAIGHT" -eq 1; then
+	if test $SAMPFREQ -le 25600; then
+		FFTLEN=1024
+	elif test $SAMPFREQ -le 51200; then
+		FFTLEN=2048
+	elif test $SAMPFREQ -le 102400; then
+		FFTLEN=4096
+	else
+		FFTLEN=8192
+	fi
+else
+	if test -z "$FFTLEN"; then
+		FFTLEN=2048
+	fi
 fi
 
 if test -z "$FREQWARP"; then
@@ -502,8 +533,9 @@ if test -z "$FREQWARP"; then
 		10000) FREQWARP=0.35 ;;
 		12000) FREQWARP=0.37 ;;
 		16000) FREQWARP=0.42 ;;
+		20000) FREQWARP=0.44 ;;
 		22050) FREQWARP=0.45 ;;
-		32000) FREQWARP=0.45 ;;
+		32000) FREQWARP=0.50 ;;
 		44100) FREQWARP=0.53 ;;
 		48000) FREQWARP=0.55 ;;
 		*)     FREQWARP=0.00 ;;
@@ -518,7 +550,7 @@ if test -z "$MGCORDER"; then
 	if test $GAMMA -eq 0; then
 		MGCORDER=34
 	else
-		MGCORDER=12
+			MGCORDER=12
 	fi
 fi
 
@@ -532,11 +564,11 @@ fi
 
 if test -z "$LOWERF0"; then
 	LOWERF0=110
-fi 
+fi
 
 if test -z "$UPPERF0"; then
 	UPPERF0=280
-fi 
+fi
 
 if test -z "$PSTFILTER_MCP"; then
 	PSTFILTER_MCP=1.4
@@ -550,8 +582,8 @@ if test -z "$IMPLEN"; then
 	if test $GAMMA -eq 0; then
 		IMPLEN=4096
 	else
-	IMPLEN=576
-fi
+		IMPLEN=576
+	fi
 fi
 
 MGCVSIZE=`expr $MGCORDER + 1`
@@ -570,8 +602,8 @@ AC_SUBST(FRAMELEN)
 AC_SUBST(FRAMESHIFT)
 AC_SUBST(WINDOWTYPE)
 AC_SUBST(NORMALIZE)
-AC_SUBST(FFTLEN)
 AC_SUBST(SAMPFREQ)
+AC_SUBST(FFTLEN)
 AC_SUBST(FREQWARP)
 AC_SUBST(GAMMA)
 AC_SUBST(MGCORDER)
@@ -737,7 +769,7 @@ AC_ARG_VAR([GVWEIGHT],[weight for GV output prob. (default=1.0)])
 AC_ARG_VAR([OPTKIND],[optimization method (STEEPEST, NEWTON, or LBFGS) (default=NEWTON)])
 AC_ARG_VAR([NOSILGV],[turn on GV without silent and pause phoneme (0:off or 1:on, default=1)])
 AC_ARG_VAR([CDGV],[turn on context-dependent GV (0:off or 1:on, default=1)])
-AC_ARG_VAR([USEMSPF],[turn on modulation spectrum-based postfilter (0:off or 1:on, default=1)])
+AC_ARG_VAR([USEMSPF],[turn on modulation spectrum-based postfilter (0:off or 1:on, default=0)])
 
 # default values
 if test -z "$PGTYPE"; then
@@ -801,7 +833,7 @@ if test -z "$CDGV"; then
 fi
 
 if test -z "$USEMSPF"; then
-	USEMSPF=1
+	USEMSPF=0
 fi
 
 # substitute variables
@@ -823,6 +855,88 @@ AC_SUBST(CDGV)
 AC_SUBST(USEMSPF)
 
 
+# neural network training settings
+# parse command-line arguments
+AC_ARG_VAR([USEDNN],[use deep neural network as acoustic model (0:off or 1:on, default=0)])
+AC_ARG_VAR([NHIDDENUNITS],[number of hidden units in each layer (1st 2nd 3rd ...) (default='1024 1024 1024')])
+AC_ARG_VAR([ACTIVATION],[activation function for hidden units -> 0: Linear  1: Sigmoid  2: Tanh  3: ReLU (default=1)])
+AC_ARG_VAR([OPTIMIZER],[optimizer -> 0: SGD  1: Momentum  2: AdaGrad  3: AdaDelta  4: Adam  5: RMSprop (default=4)])
+AC_ARG_VAR([LEARNRATE],[learning rate (default=0.001)])
+AC_ARG_VAR([KEEPPROB],[probability for not randomly setting activities to zero (default=0.5)])
+AC_ARG_VAR([USEQUEUE],[use queue to load training data (0:off or 1:on, default=0)])
+AC_ARG_VAR([QUEUESIZE],[queue size (default=5000)])
+AC_ARG_VAR([BATCHSIZE],[mini-batch size (default=256)])
+AC_ARG_VAR([NEPOCH],[number of epochs (default=50)])
+AC_ARG_VAR([NTHREAD],[number of threads (0:unlimited, default=0)])
+AC_ARG_VAR([RANDOMSEED],[random seed for initialization (default=12345)])
 
-# output data/Makefile and scripts/Config.pm
-AC_OUTPUT(data/Makefile scripts/Config.pm Makefile)
+# default values
+if test -z "$USEDNN"; then
+	USEDNN=0
+elif test $USEDNN -eq 1; then
+	if test `$PYTHON -c 'import tensorflow as tf; print(tf.__version__)' 2>&1 >/dev/null | grep -c Error` -gt 0; then
+		AC_MSG_ERROR(Can't find TensorFlow)
+	fi
+fi
+
+if test -z "$NHIDDENUNITS"; then
+	NHIDDENUNITS='1024 1024 1024'
+fi
+
+if test -z "$ACTIVATION"; then
+	ACTIVATION=1
+fi
+
+if test -z "$OPTIMIZER"; then
+	OPTIMIZER=4
+fi
+
+if test -z "$LEARNRATE"; then
+	LEARNRATE=0.001
+fi
+
+if test -z "$KEEPPROB"; then
+	KEEPPROB=0.5
+fi
+
+if test -z "$USEQUEUE"; then
+	USEQUEUE=0
+fi
+
+if test -z "$QUEUESIZE"; then
+	QUEUESIZE=5000
+fi
+
+if test -z "$BATCHSIZE"; then
+	BATCHSIZE=256
+fi
+
+if test -z "$NEPOCH"; then
+	NEPOCH=50
+fi
+
+if test -z "$NTHREAD"; then
+	NTHREAD=0
+fi
+
+if test -z "$RANDOMSEED"; then
+	RANDOMSEED=12345
+fi
+
+# substitute variables
+AC_SUBST(USEDNN)
+AC_SUBST(NHIDDENUNITS)
+AC_SUBST(ACTIVATION)
+AC_SUBST(OPTIMIZER)
+AC_SUBST(LEARNRATE)
+AC_SUBST(KEEPPROB)
+AC_SUBST(USEQUEUE)
+AC_SUBST(QUEUESIZE)
+AC_SUBST(BATCHSIZE)
+AC_SUBST(NEPOCH)
+AC_SUBST(NTHREAD)
+AC_SUBST(RANDOMSEED)
+
+
+# output Makefiles and config files
+AC_OUTPUT(data/Makefile Makefile scripts/Config.pm)

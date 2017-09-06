@@ -4,7 +4,7 @@
 #           http://hts.sp.nitech.ac.jp/                             #
 # ----------------------------------------------------------------- #
 #                                                                   #
-#  Copyright (c) 2001-2014  Nagoya Institute of Technology          #
+#  Copyright (c) 2001-2016  Nagoya Institute of Technology          #
 #                           Department of Computer Science          #
 #                                                                   #
 #                2001-2008  Tokyo Institute of Technology           #
@@ -45,6 +45,7 @@
 # setting
 SPEAKER = @SPEAKER@
 DATASET = @DATASET@
+QNAME   = @QNAME@
 
 # awk and perl
 AWK  = @AWK@
@@ -63,12 +64,15 @@ PITCH   = @PITCH@
 FRAME   = @FRAME@
 WINDOW  = @WINDOW@
 RAW2WAV = @RAW2WAV@
+BCUT    = @BCUT@
 
 # MATLAB and STRAIGHT
 USESTRAIGHT = @USESTRAIGHT@
 MATLAB      = @MATLAB@
 STRAIGHT    = @STRAIGHT@
-STRMAGIC    = 72089600   # magic number for turning off normalization (72089600 = 2200 * 32768)
+
+# DNN
+USEDNN = @USEDNN@
 
 # Festival commands
 USEUTT    = @USEUTT@
@@ -100,9 +104,9 @@ NBAPWIN = @NBAPWIN@
 
 all: analysis labels
 
-analysis: features cmp
+analysis: features cmp ffo stats
 
-labels: lab mlf list scp
+labels: lab mlf list scp question
 
 features:
 	# Extracting features from raw audio
@@ -116,32 +120,31 @@ features:
 			echo "Extracting features from $${raw}"; \
 			if [ $(USESTRAIGHT) -eq 0 ]; then \
 				$(X2X) +sf $${raw} | $(PITCH) -H $(UPPERF0) -L $(LOWERF0) -p $(FRAMESHIFT) -s $${SAMPKHZ} -o 2 > lf0/$${base}.lf0; \
-			if [ $(GAMMA) -eq 0 ]; then \
+				if [ $(GAMMA) -eq 0 ]; then \
 					$(X2X) +sf $${raw} | \
 					$(FRAME) -l $(FRAMELEN) -p $(FRAMESHIFT) | \
-				$(WINDOW) -l $(FRAMELEN) -L $(FFTLEN) -w $(WINDOWTYPE) -n $(NORMALIZE) | \
-				$(MGCEP) -a $(FREQWARP) -m $(MGCORDER) -l $(FFTLEN) -e 1.0E-08 > mgc/$${base}.mgc; \
-			else \
-				if [ $(LNGAIN) -eq 1 ]; then \
+					$(WINDOW) -l $(FRAMELEN) -L $(FFTLEN) -w $(WINDOWTYPE) -n $(NORMALIZE) | \
+					$(MGCEP) -a $(FREQWARP) -m $(MGCORDER) -l $(FFTLEN) -e 1.0E-08 > mgc/$${base}.mgc; \
+				else \
+					if [ $(LNGAIN) -eq 1 ]; then \
 						GAINOPT="-L"; \
-				fi; \
+					fi; \
 					$(X2X) +sf $${raw} | \
 					$(FRAME) -l $(FRAMELEN) -p $(FRAMESHIFT) | \
-				$(WINDOW) -l $(FRAMELEN) -L $(FFTLEN) -w $(WINDOWTYPE) -n $(NORMALIZE) | \
-				$(MGCEP) -a $(FREQWARP) -c $(GAMMA) -m $(MGCORDER) -l $(FFTLEN) -e 1.0E-08 -o 4 | \
-				$(LPC2LSP) -m $(MGCORDER) -s $${SAMPKHZ} $${GAINOPT} -n $(FFTLEN) -p 8 -d 1.0E-08 > mgc/$${base}.mgc; \
-			fi; \
+					$(WINDOW) -l $(FRAMELEN) -L $(FFTLEN) -w $(WINDOWTYPE) -n $(NORMALIZE) | \
+					$(MGCEP) -a $(FREQWARP) -c $(GAMMA) -m $(MGCORDER) -l $(FFTLEN) -e 1.0E-08 -o 4 | \
+					$(LPC2LSP) -m $(MGCORDER) -s $${SAMPKHZ} $${GAINOPT} -n $(FFTLEN) -p 8 -d 1.0E-08 > mgc/$${base}.mgc; \
+				fi; \
 				if [ -n "`$(NAN) lf0/$${base}.lf0`" ]; then \
 					echo " Failed to extract features from $${raw}"; \
 					rm -f lf0/$${base}.lf0; \
 				fi; \
-			if [ -n "`$(NAN) mgc/$${base}.mgc`" ]; then \
+				if [ -n "`$(NAN) mgc/$${base}.mgc`" ]; then \
 					echo " Failed to extract features from $${raw}"; \
-				rm -f mgc/$${base}.mgc; \
-			fi; \
+					rm -f mgc/$${base}.mgc; \
+				fi; \
 			else \
 				FRAMESHIFTMS=`echo $(FRAMESHIFT) | $(X2X) +af | $(SOPR) -m 1000 -d $(SAMPFREQ) | $(X2X) +fa`; \
-				NONORMRATE=`$(X2X) +sf $${raw} | $(VSTAT) -d -o 2 | $(SOPR) -SQRT -INV -m $(STRMAGIC) | $(X2X) +fa`; \
 				$(RAW2WAV) -s $${SAMPKHZ} -d . $${raw}; \
 				echo "path(path,'$(STRAIGHT)');"                    >  $${base}.m; \
 				echo "prm.F0frameUpdateInterval=$${FRAMESHIFTMS};"  >> $${base}.m; \
@@ -153,7 +156,7 @@ features:
 				echo "[sp] = exstraightspec(x,f0,fs,prm);"          >> $${base}.m; \
 				echo "ap = ap';"                                    >> $${base}.m; \
 				echo "sp = sp';"                                    >> $${base}.m; \
-				echo "sp = sp*$${NONORMRATE};"                      >> $${base}.m; \
+				echo "sp = sp*32768.0;"                             >> $${base}.m; \
 				echo "save '$${base}.f0' f0 -ascii;"                >> $${base}.m; \
 				echo "save '$${base}.ap' ap -ascii;"                >> $${base}.m; \
 				echo "save '$${base}.sp' sp -ascii;"                >> $${base}.m; \
@@ -161,22 +164,22 @@ features:
 				$(MATLAB) < $${base}.m; \
 				if [ -s $${base}.f0 ]; then \
 					$(X2X) +af $${base}.f0 | $(SOPR) -magic 0.0 -LN -MAGIC -1.0E+10 > lf0/$${base}.lf0; \
-			if [ -n "`$(NAN) lf0/$${base}.lf0`" ]; then \
+					if [ -n "`$(NAN) lf0/$${base}.lf0`" ]; then \
 						echo " Failed to extract features from $${raw}"; \
-				rm -f lf0/$${base}.lf0; \
+						rm -f lf0/$${base}.lf0; \
 					fi; \
 				fi; \
 				if [ -s $${base}.sp ]; then \
 					if [ $(GAMMA) -eq 0 ]; then \
 						$(X2X) +af $${base}.sp | \
-						$(MGCEP) -a $(FREQWARP) -m $(MGCORDER) -l 2048 -e 1.0E-08 -j 0 -f 0.0 -q 3 > mgc/$${base}.mgc; \
+						$(MGCEP) -a $(FREQWARP) -m $(MGCORDER) -l $(FFTLEN) -e 1.0E-08 -j 0 -f 0.0 -q 3 > mgc/$${base}.mgc; \
 					else \
 						if [ $(LNGAIN) -eq 1 ]; then \
 							GAINOPT="-L"; \
 						fi; \
 						$(X2X) +af $${base}.sp | \
-						$(MGCEP) -a $(FREQWARP) -c $(GAMMA) -m $(MGCORDER) -l 2048 -e 1.0E-08 -j 0 -f 0.0 -q 3 -o 4 | \
-						$(LPC2LSP) -m $(MGCORDER) -s $${SAMPKHZ} $${GAINOPT} -n 2048 -p 8 -d 1.0E-08 > mgc/$${base}.mgc; \
+						$(MGCEP) -a $(FREQWARP) -c $(GAMMA) -m $(MGCORDER) -l $(FFTLEN) -e 1.0E-08 -j 0 -f 0.0 -q 3 -o 4 | \
+						$(LPC2LSP) -m $(MGCORDER) -s $${SAMPKHZ} $${GAINOPT} -n $(FFTLEN) -p 8 -d 1.0E-08 > mgc/$${base}.mgc; \
 					fi; \
 					if [ -n "`$(NAN) mgc/$${base}.mgc`" ]; then \
 						echo " Failed to extract features from $${raw}"; \
@@ -185,7 +188,7 @@ features:
 				fi; \
 				if [ -s $${base}.ap ]; then \
 					$(X2X) +af $${base}.ap | \
-					$(MGCEP) -a $(FREQWARP) -m $(BAPORDER) -l 2048 -e 1.0E-08 -j 0 -f 0.0 -q 1 > bap/$${base}.bap; \
+					$(MGCEP) -a $(FREQWARP) -m $(BAPORDER) -l $(FFTLEN) -e 1.0E-08 -j 0 -f 0.0 -q 1 > bap/$${base}.bap; \
 					if [ -n "`$(NAN) bap/$${base}.bap`" ]; then \
 						echo " Failed to extract features from $${raw}"; \
 						rm -f bap/$${base}.bap; \
@@ -196,20 +199,20 @@ features:
 		fi; \
 	done
 
-cmp: 
+cmp:
 	# Composing training data files from extracted features
 	mkdir -p cmp
 	for raw in raw/$(DATASET)_$(SPEAKER)_*.raw; do \
 		base=`basename $${raw} .raw`; \
 		echo "Composing training data for $${base}"; \
 		if [ $(USESTRAIGHT) -eq 0 ]; then \
-		MGCDIM=`expr $(MGCORDER) + 1`; \
-		LF0DIM=1; \
-		MGCWINDIM=`expr $(NMGCWIN) \* $${MGCDIM}`; \
-		LF0WINDIM=`expr $(NLF0WIN) \* $${LF0DIM}`; \
-		BYTEPERFRAME=`expr 4 \* \( $${MGCWINDIM} + $${LF0WINDIM} \)`; \
+			MGCDIM=`expr $(MGCORDER) + 1`; \
+			LF0DIM=1; \
+			MGCWINDIM=`expr $(NMGCWIN) \* $${MGCDIM}`; \
+			LF0WINDIM=`expr $(NLF0WIN) \* $${LF0DIM}`; \
+			BYTEPERFRAME=`expr 4 \* \( $${MGCWINDIM} + $${LF0WINDIM} \)`; \
 			if [ -s mgc/$${base}.mgc -a -s lf0/$${base}.lf0 ]; then \
-			MGCWINS=""; \
+				MGCWINS=""; \
 				i=1; \
 				while [ $${i} -le $(NMGCWIN) ]; do \
 					eval MGCWINS=\"$${MGCWINS} $(MGCWIN)$${i}\"; \
@@ -242,7 +245,7 @@ cmp:
 				while [ $${i} -le $(NMGCWIN) ]; do \
 					eval MGCWINS=\"$${MGCWINS} $(MGCWIN)$${i}\"; \
 					i=`expr $${i} + 1`; \
-		done; \
+				done; \
 				$(PERL) scripts/window.pl $${MGCDIM} mgc/$${base}.mgc $${MGCWINS} > tmp.mgc; \
 				LF0WINS=""; \
 				i=1; \
@@ -266,19 +269,128 @@ cmp:
 		fi; \
 	done
 
+ffo:
+	# Making frame-by-frame DNN outputs from extracted features
+	if [ $(USEDNN) -eq 1 ]; then \
+		mkdir -p ffo; \
+		for raw in raw/$(DATASET)_$(SPEAKER)_*.raw; do \
+			base=`basename $${raw} .raw`; \
+			echo "Making frame-by-frame DNN outputs for $${base}"; \
+			if [ $(USESTRAIGHT) -eq 0 ]; then \
+				MGCDIM=`expr $(MGCORDER) + 1`; \
+				VUVDIM=1; \
+				LF0DIM=1; \
+				MGCWINDIM=`expr $(NMGCWIN) \* $${MGCDIM}`; \
+				LF0WINDIM=`expr $(NLF0WIN) \* $${LF0DIM}`; \
+				MGCWINVUVDIM=`expr $${MGCWINDIM} + $${VUVDIM}`; \
+				if [ -s mgc/$${base}.mgc -a -s lf0/$${base}.lf0 ]; then \
+					MGCWINS=""; \
+					i=1; \
+					while [ $${i} -le $(NMGCWIN) ]; do \
+						eval MGCWINS=\"$${MGCWINS} $(MGCWIN)$${i}\"; \
+						i=`expr $${i} + 1`; \
+					done; \
+					$(PERL) scripts/window.pl $${MGCDIM} mgc/$${base}.mgc $${MGCWINS} > tmp.mgc; \
+					$(SOPR) lf0/$${base}.lf0 -magic -1.0E+10 -m 0.0 -a 1.0 -MAGIC 0.0 > tmp.vuv; \
+					LF0WINS=""; \
+					i=1; \
+					while [ $${i} -le $(NLF0WIN) ]; do \
+						eval LF0WINS=\"$${LF0WINS} $(LF0WIN)$${i}\"; \
+						i=`expr $${i} + 1`; \
+					done; \
+					$(PERL) scripts/interpolate.pl $${LF0DIM} lf0/$${base}.lf0  > tmp.ip.lf0; \
+					$(PERL) scripts/window.pl $${LF0DIM} tmp.ip.lf0 $${LF0WINS} > tmp.lf0; \
+					$(MERGE) +f -s 0 -l $${VUVDIM}    -L $${MGCWINDIM}    tmp.mgc     < tmp.vuv > tmp.mgc+vuv; \
+					$(MERGE) +f -s 0 -l $${LF0WINDIM} -L $${MGCWINVUVDIM} tmp.mgc+vuv < tmp.lf0 > ffo/$${base}.ffo; \
+					rm -f tmp.mgc tmp.vuv tmp.lf0 tmp.ip.lf0 tmp.mgc+vuv; \
+				fi; \
+			else \
+				MGCDIM=`expr $(MGCORDER) + 1`; \
+				VUVDIM=1; \
+				LF0DIM=1; \
+				BAPDIM=`expr $(BAPORDER) + 1`; \
+				MGCWINDIM=`expr $(NMGCWIN) \* $${MGCDIM}`; \
+				LF0WINDIM=`expr $(NLF0WIN) \* $${LF0DIM}`; \
+				BAPWINDIM=`expr $(NBAPWIN) \* $${BAPDIM}`; \
+				MGCWINVUVDIM=`expr $${MGCWINDIM} + $${VUVDIM}`; \
+				MGCWINVUVLF0WINDIM=`expr $${MGCWINVUVDIM} + $${LF0WINDIM}`; \
+				if [ -s mgc/$${base}.mgc -a -s lf0/$${base}.lf0 -a -s bap/$${base}.bap ]; then \
+					MGCWINS=""; \
+					i=1; \
+					while [ $${i} -le $(NMGCWIN) ]; do \
+						eval MGCWINS=\"$${MGCWINS} $(MGCWIN)$${i}\"; \
+						i=`expr $${i} + 1`; \
+					done; \
+					$(PERL) scripts/window.pl $${MGCDIM} mgc/$${base}.mgc $${MGCWINS} > tmp.mgc; \
+					$(SOPR) lf0/$${base}.lf0 -magic -1.0E+10 -m 0.0 -a 1.0 -MAGIC 0.0 > tmp.vuv; \
+					LF0WINS=""; \
+					i=1; \
+					while [ $${i} -le $(NLF0WIN) ]; do \
+						eval LF0WINS=\"$${LF0WINS} $(LF0WIN)$${i}\"; \
+						i=`expr $${i} + 1`; \
+					done; \
+					$(PERL) scripts/interpolate.pl $${LF0DIM} lf0/$${base}.lf0  > tmp.ip.lf0; \
+					$(PERL) scripts/window.pl $${LF0DIM} tmp.ip.lf0 $${LF0WINS} > tmp.lf0; \
+					BAPWINS=""; \
+					i=1; \
+					while [ $${i} -le $(NBAPWIN) ]; do \
+						eval BAPWINS=\"$${BAPWINS} $(BAPWIN)$${i}\"; \
+						i=`expr $${i} + 1`; \
+					done; \
+					$(PERL) scripts/window.pl $${BAPDIM} bap/$${base}.bap $${BAPWINS} > tmp.bap; \
+					$(MERGE) +f -s 0 -l $${VUVDIM}    -L $${MGCWINDIM}          tmp.mgc         < tmp.vuv > tmp.mgc+vuv; \
+					$(MERGE) +f -s 0 -l $${LF0WINDIM} -L $${MGCWINVUVDIM}       tmp.mgc+vuv     < tmp.lf0 > tmp.mgc+vuv+lf0; \
+					$(MERGE) +f -s 0 -l $${BAPWINDIM} -L $${MGCWINVUVLF0WINDIM} tmp.mgc+vuv+lf0 < tmp.bap > ffo/$${base}.ffo; \
+					rm -f tmp.mgc tmp.vuv tmp.lf0 tmp.ip.lf0 tmp.bap tmp.mgc+vuv tmp.mgc+vuv+lf0; \
+				fi; \
+			fi; \
+		done; \
+	fi
+
+stats:
+	# Calculating statistics for MLPG
+	if [ $(USEDNN) -eq 1 ]; then \
+		mkdir -p stats; \
+		if [ $(USESTRAIGHT) -eq 0 ]; then \
+			MGCDIM=`expr $(MGCORDER) + 1`; \
+			VUVDIM=1; \
+			LF0DIM=1; \
+			MGCWINDIM=`expr $(NMGCWIN) \* $${MGCDIM}`; \
+			LF0WINDIM=`expr $(NLF0WIN) \* $${LF0DIM}`; \
+			MGCWINVUVDIM=`expr $${MGCWINDIM} + $${VUVDIM}`; \
+			FFODIM=`expr $${MGCWINVUVDIM} + $${LF0WINDIM}`; \
+			cat ffo/*.ffo | $(VSTAT) -l $${FFODIM} -d -o 2 > stats/ffo.var; \
+			$(BCUT) +f -s 0                -e `expr $${MGCWINDIM} - 1` -l 1 stats/ffo.var > stats/mgc.var; \
+			$(BCUT) +f -s $${MGCWINVUVDIM} -e -1                       -l 1 stats/ffo.var > stats/lf0.var; \
+		else \
+			MGCDIM=`expr $(MGCORDER) + 1`; \
+			VUVDIM=1; \
+			LF0DIM=1; \
+			BAPDIM=`expr $(BAPORDER) + 1`; \
+			MGCWINDIM=`expr $(NMGCWIN) \* $${MGCDIM}`; \
+			LF0WINDIM=`expr $(NLF0WIN) \* $${LF0DIM}`; \
+			BAPWINDIM=`expr $(NBAPWIN) \* $${BAPDIM}`; \
+			MGCWINVUVDIM=`expr $${MGCWINDIM} + $${VUVDIM}`; \
+			MGCWINVUVLF0WINDIM=`expr $${MGCWINVUVDIM} + $${LF0WINDIM}`; \
+			FFODIM=`expr $${MGCWINVUVLF0WINDIM} + $${BAPWINDIM}`; \
+			cat ffo/*.ffo | $(VSTAT) -l $${FFODIM} -d -o 2 > stats/ffo.var; \
+			$(BCUT) +f -s 0                      -e `expr $${MGCWINDIM} - 1`          -l 1 stats/ffo.var > stats/mgc.var; \
+			$(BCUT) +f -s $${MGCWINVUVDIM}       -e `expr $${MGCWINVUVLF0WINDIM} - 1` -l 1 stats/ffo.var > stats/lf0.var; \
+			$(BCUT) +f -s $${MGCWINVUVLF0WINDIM} -e -1                                -l 1 stats/ffo.var > stats/bap.var; \
+		fi; \
+	fi
+
 lab:
 	# Extracting monophone and fullcontext labels
 	mkdir -p labels/mono
 	mkdir -p labels/full
 	if [ $(USEUTT) -eq 1 ]; then \
-	for utt in utts/$(DATASET)_$(SPEAKER)_*.utt; do \
-		base=`basename $${utt} .utt`; \
-		if [ -s $${utt} ]; then \
+		for utt in utts/$(DATASET)_$(SPEAKER)_*.utt; do \
+			base=`basename $${utt} .utt`; \
+			if [ -s $${utt} ]; then \
 				echo "Extracting labels from $${utt}"; \
-				$(DUMPFEATS) -eval scripts/extra_feats.scm \
-                             -eval scripts/select_phoneset.scm \
--relation Segment -feats scripts/label.feats -output tmp.feats $${utt}; \
-		fi; \
+				$(DUMPFEATS) -eval scripts/extra_feats.scm -relation Segment -feats scripts/label.feats -output tmp.feats $${utt}; \
+			fi; \
 			if [ -s tmp.feats ]; then \
 				$(AWK) -f scripts/label-full.awk tmp.feats > labels/full/$${base}.lab; \
 				$(AWK) -f scripts/label-mono.awk tmp.feats > labels/mono/$${base}.lab; \
@@ -347,21 +459,26 @@ scp:
 	# Generating a trainig data script
 	mkdir -p scp
 
-	rm -f scp/train.scp
+	rm -f scp/train.cmp.scp
 	for cmp in @PWD@/data/cmp/$(DATASET)_$(SPEAKER)_*.cmp; do \
 		if [ -s $${cmp} -a -s labels/mono/`basename $${cmp} .cmp`.lab -a -s labels/full/`basename $${cmp} .cmp`.lab ]; then \
-			echo $${cmp} >> scp/train.scp; \
+			echo $${cmp} >> scp/train.cmp.scp; \
 		fi \
 	done
 
 	# Generating a generation label script
-	rm -f scp/gen.scp
+	rm -f scp/gen.lab.scp
 	for lab in @PWD@/data/labels/gen/*.lab; do \
-		echo $${lab} >> scp/gen.scp; \
+		echo $${lab} >> scp/gen.lab.scp; \
 	done
 
+question:
+	# Generating a question file
+	mkdir -p questions
+	$(PERL) scripts/makequestion.pl configs/$(QNAME).conf > questions/questions_$(QNAME).hed
+	grep Utterance questions/questions_$(QNAME).hed > questions/questions_utt_$(QNAME).hed
 
-clean: clean-mgc clean-lf0 clean-bap clean-cmp clean-lab clean-mlf clean-list clean-scp
+clean: clean-mgc clean-lf0 clean-bap clean-cmp clean-ffo clean-stats clean-lab clean-mlf clean-list clean-scp clean-question
 
 clean-mgc:
 	rm -rf mgc
@@ -374,6 +491,12 @@ clean-bap:
 
 clean-cmp:
 	rm -rf cmp
+
+clean-ffo:
+	rm -rf ffo
+
+clean-stats:
+	rm -rf stats
 
 clean-lab:
 	rm -rf labels/mono
@@ -388,7 +511,10 @@ clean-list:
 clean-scp:
 	rm -rf scp
 
+clean-question:
+	rm -rf questions
+
 distclean: clean
 	rm -f Makefile
 
-.PHONY: all analysis features cmp labels lab mlf list scp clean distclean
+.PHONY: all analysis features cmp ffo stats labels lab mlf list scp question clean distclean

@@ -4,7 +4,7 @@
 ;;           http://hts.sp.nitech.ac.jp/                             ;;
 ;; ----------------------------------------------------------------- ;;
 ;;                                                                   ;;
-;;  Copyright (c) 2001-2014  Nagoya Institute of Technology          ;;
+;;  Copyright (c) 2001-2016  Nagoya Institute of Technology          ;;
 ;;                           Department of Computer Science          ;;
 ;;                                                                   ;;
 ;;                2001-2008  Tokyo Institute of Technology           ;;
@@ -43,7 +43,7 @@
 ;; ----------------------------------------------------------------- ;;
 ;;
 ;;  Extra features
-;;  From Segment items refer by 
+;;  From Segment items refer by
 ;;
 ;;  R:SylStructure.parent.parent.R:Phrase.parent.lisp_num_syls_in_phrase
 ;;  R:SylStructure.parent.parent.R:Phrase.parent.lisp_num_words_in_phrase
@@ -126,7 +126,7 @@
         rc))
 
 (define (num_syls_in_phrase i)
-  (apply 
+  (apply
    +
    (mapcar
     (lambda (w)

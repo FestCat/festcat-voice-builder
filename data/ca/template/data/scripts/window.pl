@@ -5,7 +5,7 @@
 #           http://hts.sp.nitech.ac.jp/                             #
 # ----------------------------------------------------------------- #
 #                                                                   #
-#  Copyright (c) 2001-2014  Nagoya Institute of Technology          #
+#  Copyright (c) 2001-2016  Nagoya Institute of Technology          #
 #                           Department of Computer Science          #
 #                                                                   #
 #                2001-2008  Tokyo Institute of Technology           #
@@ -82,11 +82,11 @@ for ( $i = 1 ; $i <= $nwin ; $i++ ) {
       $chkbound[$j] = 1;
    }
    for ( $j = 1 ; $j <= $size ; $j++ ) {
-      last if ($win[$j] != 0.0);
+      last if ( $win[$j] != 0.0 );
       $chkbound[$j] = 0;
    }
    for ( $j = $size ; $j >= 1 ; $j-- ) {
-      last if ($win[$j] != 0.0);
+      last if ( $win[$j] != 0.0 );
       $chkbound[$j] = 0;
    }
 

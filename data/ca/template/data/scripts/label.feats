@@ -4,7 +4,7 @@
 ;;           http://hts.sp.nitech.ac.jp/                             ;;
 ;; ----------------------------------------------------------------- ;;
 ;;                                                                   ;;
-;;  Copyright (c) 2001-2014  Nagoya Institute of Technology          ;;
+;;  Copyright (c) 2001-2016  Nagoya Institute of Technology          ;;
 ;;                           Department of Computer Science          ;;
 ;;                                                                   ;;
 ;;                2001-2008  Tokyo Institute of Technology           ;;
@@ -46,8 +46,8 @@
 ;; SEGMENT
 
 ;; {p, c, n}.name
-    p.name                                                  ;  1 
-    name                                                    ;  2 
+    p.name                                                  ;  1
+    name                                                    ;  2
     n.name                                                  ;  3
 
 ;; position in syllable (segment)
@@ -79,20 +79,20 @@
     R:SylStructure.parent.R:Syllable.syl_out                ; 16
 
 ;; position in phrase (stressed syllable)
-    R:SylStructure.parent.R:Syllable.ssyl_in                ; 17
-    R:SylStructure.parent.R:Syllable.ssyl_out               ; 18
+    R:SylStructure.parent.R:Syllable.ssyl_in_modified_version ; 17
+    R:SylStructure.parent.R:Syllable.ssyl_out                 ; 18
 
 ;; position in phrase (accented syllable)
-    R:SylStructure.parent.R:Syllable.asyl_in                ; 19
-    R:SylStructure.parent.R:Syllable.asyl_out               ; 20
+    R:SylStructure.parent.R:Syllable.asyl_in_modified_version ; 19
+    R:SylStructure.parent.R:Syllable.asyl_out                 ; 20
 
-;; distance from stressed syllable                 
+;; distance from stressed syllable
     R:SylStructure.parent.R:Syllable.lisp_distance_to_p_stress   ; 21
     R:SylStructure.parent.R:Syllable.lisp_distance_to_n_stress   ; 22
 
-;; distance to accented syllable (syllable)                 
+;; distance to accented syllable (syllable)
     R:SylStructure.parent.R:Syllable.lisp_distance_to_p_accent   ; 23
-    R:SylStructure.parent.R:Syllable.lisp_distance_to_n_accent   ; 24  
+    R:SylStructure.parent.R:Syllable.lisp_distance_to_n_accent   ; 24
 
 ;; name of the vowel of syllable
     R:SylStructure.parent.R:Syllable.syl_vowel              ; 25

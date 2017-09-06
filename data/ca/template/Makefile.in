@@ -4,7 +4,7 @@
 #           http://hts.sp.nitech.ac.jp/                             #
 # ----------------------------------------------------------------- #
 #                                                                   #
-#  Copyright (c) 2001-2014  Nagoya Institute of Technology          #
+#  Copyright (c) 2001-2016  Nagoya Institute of Technology          #
 #                           Department of Computer Science          #
 #                                                                   #
 #                2001-2008  Tokyo Institute of Technology           #
@@ -45,7 +45,7 @@
 all: data voice
 
 data:
-	@ (cd data ; $(MAKE) all)
+	@ (cd data ; $(MAKE) all -f Makefile)
 
 voice:
 	echo "Running a training/synthesis perl script (Training.pl)"
@@ -54,7 +54,7 @@ voice:
 @DATASET@_@SPEAKER@_hts.tgz:
 	rm -rf "@DATASET@_@SPEAKER@_hts"
 	cp -r package "@DATASET@_@SPEAKER@_hts"
-	cp "voices/qst@QNUM@/ver@VER@/@DATASET@_@SPEAKER@.htsvoice" "@DATASET@_@SPEAKER@_hts/hts"
+	cp "voices/ver@VER@/@DATASET@_@SPEAKER@.htsvoice" "@DATASET@_@SPEAKER@_hts/hts"
 	mv "@DATASET@_@SPEAKER@_hts/configure.ac" "@DATASET@_@SPEAKER@_hts/configure.ac.tmp"
 	sed s/!VOICENAME!/@DATASET@_@SPEAKER@_hts/g < "@DATASET@_@SPEAKER@_hts/configure.ac.tmp"  > \
 	     "@DATASET@_@SPEAKER@_hts/configure.ac"
@@ -67,17 +67,17 @@ voice:
 clean: clean-data clean-voice
 
 clean-data:
-	@ (cd data ; $(MAKE) clean)
+	@ (cd data ; $(MAKE) clean -f Makefile)
 
 clean-voice:
-	rm -rf models stats edfiles trees gv mspf voices gen proto configs
+	rm -rf models stats edfiles trees gv mspf dnn voices gen proto configs
 
 distclean: clean
-	@ (cd data; $(MAKE) distclean)
-	rm -f scripts/Config.pm
+	@ (cd data ; $(MAKE) distclean -f Makefile)
 	rm -f Makefile
+	rm -f scripts/Config.pm
 	rm -f config.log
 	rm -f config.status
 	rm -rf autom4te.cache
 
-.PHONY: data voice clean distclean
+.PHONY: all data voice clean distclean

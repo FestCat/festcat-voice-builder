@@ -4,7 +4,7 @@
 #           http://hts.sp.nitech.ac.jp/                             #
 # ----------------------------------------------------------------- #
 #                                                                   #
-#  Copyright (c) 2001-2014  Nagoya Institute of Technology          #
+#  Copyright (c) 2001-2016  Nagoya Institute of Technology          #
 #                           Department of Computer Science          #
 #                                                                   #
 #                2001-2008  Tokyo Institute of Technology           #
@@ -50,20 +50,20 @@
    printf "%10.0f %10.0f ", 1e7 * $65, 1e7 * $66
 
 #  pp.name
-    printf "%s",  ($63 == "0") ? "x" : $63
+    printf "%s",  ($63 == "0") ? "xx" : $63
 #  p.name
-    printf "^%s", ($1  == "0") ? "x" : $1
+    printf "^%s", ($1  == "0") ? "xx" : $1
 #  c.name
     printf "-%s", $2
 #  n.name
-    printf "+%s", ($3  == "0") ? "x" : $3
+    printf "+%s", ($3  == "0") ? "xx" : $3
 #  nn.name
-    printf "=%s", ($64 == "0") ? "x" : $64 
+    printf "=%s", ($64 == "0") ? "xx" : $64
 
 #  position in syllable (segment)
     printf "@"
-    printf "%s",  ($2 == "pau") ? "x" : $4 + 1
-    printf "_%s", ($2 == "pau") ? "x" : $12 - $4
+    printf "%s",  ($2 == "pau") ? "xx" : $4 + 1
+    printf "_%s", ($2 == "pau") ? "xx" : $12 - $4
 
 ##############################
 ###  SYLLABLE
@@ -71,57 +71,57 @@
 ## previous syllable
 
 #  p.stress
-    printf "/A:%s", ($2 == "pau") ? $49 : $5
+    printf "/A:%s", ($2 == "pau") ? ($53==0?"xx":$49) : ($11==0?"xx":$5)
 #  p.accent
-    printf "_%s", ($2 == "pau") ? $51 : $8
+    printf "_%s", ($2 == "pau") ? ($53==0?"xx":$51) : ($11==0?"xx":$8)
 #  p.length
-    printf "_%s", ($2 == "pau") ? $53 : $11
+    printf "_%s", ($2 == "pau") ? ($53==0?"xx":$53) : ($11==0?"xx":$11)
 
 ## current syllable
 
 #  c.stress
-    printf "/B:%s", ($2 == "pau") ? "x" : $6
+    printf "/B:%s", ($2 == "pau") ? "xx" : $6
 #  c.accent
-    printf "-%s", ($2 == "pau") ? "x" : $9
+    printf "-%s", ($2 == "pau") ? "xx" : $9
 #  c.length
-    printf "-%s", ($2 == "pau") ? "x" : $12
+    printf "-%s", ($2 == "pau") ? "xx" : $12
 
 #  position in word (syllable)
-    printf "@%s", ($2 == "pau") ? "x" : $14 + 1
-    printf "-%s", ($2 == "pau") ? "x" : $30 - $14
+    printf "@%s", ($2 == "pau") ? "xx" : $14 + 1
+    printf "-%s", ($2 == "pau") ? "xx" : $30 - $14
 
 #  position in phrase (syllable)
-    printf "&%s", ($2 == "pau") ? "x" : $15 + 1
-    printf "-%s", ($2 == "pau") ? "x" : $16 + 1
+    printf "&%s", ($2 == "pau") ? "xx" : $15 + 1
+    printf "-%s", ($2 == "pau") ? "xx" : $16 + 1
 
 #  position in phrase (stressed syllable)
-    printf "#%s", ($2 == "pau") ? "x" : $17 + 1
-    printf "-%s", ($2 == "pau") ? "x" : $18 + 1
+    printf "#%s", ($2 == "pau") ? "xx" : $17
+    printf "-%s", ($2 == "pau") ? "xx" : $18
 
 #  position in phrase (accented syllable)
     printf  "$"
-    printf "%s", ($2 == "pau") ? "x" : $19 + 1
-    printf "-%s", ($2 == "pau") ? "x" : $20 + 1
+    printf "%s", ($2 == "pau") ? "xx" : $19
+    printf "-%s", ($2 == "pau") ? "xx" : $20
 
 #  distance from stressed syllable
-    printf "!%s", ($2 == "pau") ? "x" : $21
-    printf "-%s", ($2 == "pau") ? "x" : $22
+    printf "!%s", ($2 == "pau") ? "xx" : ($21==0?"xx":$21)
+    printf "-%s", ($2 == "pau") ? "xx" : ($22==0?"xx":$22)
 
-#  distance from accented syllable 
-    printf ";%s", ($2 == "pau") ? "x" : $23
-    printf "-%s", ($2 == "pau") ? "x" : $24
+#  distance from accented syllable
+    printf ";%s", ($2 == "pau") ? "xx" : ($23==0?"xx":$23)
+    printf "-%s", ($2 == "pau") ? "xx" : ($24==0?"xx":$24)
 
 #  name of the vowel of current syllable
-    printf "|%s", ($2 == "pau") ? "x" : $25
+    printf "|%s", ($2 == "pau") ? "xx" : $25
 
 ## next syllable
 
 #  n.stress
-    printf "/C:%s", ($2 == "pau") ? $50 : $7
+    printf "/C:%s", ($2 == "pau") ? ($54==0?"xx":$50) : ($13==0?"xx":$7)
 #  n.accent
-    printf "+%s", ($2 == "pau") ? $52 : $10
+    printf "+%s", ($2 == "pau") ? ($54==0?"xx":$52) : ($13==0?"xx":$10)
 #  n.length
-    printf "+%s", ($2 == "pau") ? $54 : $13
+    printf "+%s", ($2 == "pau") ? ($54==0?"xx":$54) : ($13==0?"xx":$13)
 
 ##############################
 #  WORD
@@ -130,37 +130,37 @@
 ## previous word
 
 #  p.gpos
-    printf "/D:%s", ($2 == "pau") ? $55 : $26
-#  p.lenght (syllable)
-    printf "_%s", ($2 == "pau") ? $57 : $29
+    printf "/D:%s", ($2 == "pau") ? ($57==0?"xx":$55) : ($29==0?"xx":$26)
+#  p.length (syllable)
+    printf "_%s", ($2 == "pau") ? ($57==0?"xx":$57) : ($29==0?"xx":$29)
 
 #################
 ## current word
 
 #  c.gpos
-    printf "/E:%s", ($2 == "pau") ? "x" : $27
-#  c.lenght (syllable)
-    printf "+%s", ($2 == "pau") ? "x" : $30
+    printf "/E:%s", ($2 == "pau") ? "xx" : $27
+#  c.length (syllable)
+    printf "+%s", ($2 == "pau") ? "xx" : $30
 
 #  position in phrase (word)
-    printf "@%s", ($2 == "pau") ? "x" : $32 + 1
-    printf "+%s", ($2 == "pau") ? "x" : $33
+    printf "@%s", ($2 == "pau") ? "xx" : $32 + 1
+    printf "+%s", ($2 == "pau") ? "xx" : $33
 
 #  position in phrase (content word)
-    printf "&%s", ($2 == "pau") ? "x" : $34 + 1
-    printf "+%s", ($2 == "pau") ? "x" : $35
+    printf "&%s", ($2 == "pau") ? "xx" : $34
+    printf "+%s", ($2 == "pau") ? "xx" : $35
 
 #  distance from content word in phrase
-    printf "#%s", ($2 == "pau") ? "x" : $36
-    printf "+%s", ($2 == "pau") ? "x" : $37
+    printf "#%s", ($2 == "pau") ? "xx" : ($36==0?"xx":$36)
+    printf "+%s", ($2 == "pau") ? "xx" : ($37==0?"xx":$37)
 
 ##############
 ## next word
 
 #  n.gpos
-    printf "/F:%s", ($2 == "pau") ? $56 : $28
-#  n.lenghte (syllable)
-    printf "_%s", ($2 == "pau") ? $58 : $31
+    printf "/F:%s", ($2 == "pau") ? ($58==0?"xx":$56) : ($31==0?"xx":$28)
+#  n.length (syllable)
+    printf "_%s", ($2 == "pau") ? ($58==0?"xx":$58) : ($31==0?"xx":$31)
 
 ##############################
 #  PHRASE
@@ -169,36 +169,36 @@
 ## previous phrase
 
 #  length of previous phrase (syllable)
-    printf "/G:%s", ($2 == "pau") ? $59 : $38
+    printf "/G:%s", ($2 == "pau") ? ($59==0?"xx":$59) : ($38==0?"xx":$38)
 
 #  length of previous phrase (word)
-    printf "_%s"  , ($2 == "pau") ? $61 : $41
+    printf "_%s"  , ($2 == "pau") ? ($61==0?"xx":$61) : ($41==0?"xx":$41)
 
 ####################
 ## current phrase
 
 #  length of current phrase (syllable)
-    printf "/H:%s", ($2 == "pau") ? "x" : $39
+    printf "/H:%s", ($2 == "pau") ? "xx" : $39
 
 #  length of current phrase (word)
-    printf "=%s",   ($2 == "pau") ? "x" : $42
+    printf "=%s",   ($2 == "pau") ? "xx" : $42
 
 #  position in major phrase (phrase)
     printf "^";
-    printf "%s", $44 + 1
-    printf "=%s", $48 - $44
+    printf "%s",  ($2 == "pau") ? "xx" : $44 + 1
+    printf "=%s", ($2 == "pau") ? "xx" : $48 - $44
 
 #  type of tobi endtone of current phrase
-    printf "|%s",  $45
+    printf "|%s", ($2 == "pau") ? "xx" : $45
 
 ####################
 ## next phrase
 
 #  length of next phrase (syllable)
-    printf "/I:%s", ($2 == "pau") ? $60 : $40
+    printf "/I:%s", ($2 == "pau") ? ($60==0?"xx":$60) : ($40==0?"xx":$40)
 
 #  length of next phrase (word)
-    printf "=%s",   ($2 == "pau") ? $62 : $43
+    printf "=%s",   ($2 == "pau") ? ($62==0?"xx":$62) : ($43==0?"xx":$43)
 
 ##############################
 #  UTTERANCE

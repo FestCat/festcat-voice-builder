@@ -5,7 +5,7 @@
 #           http://hts.sp.nitech.ac.jp/                             #
 # ----------------------------------------------------------------- #
 #                                                                   #
-#  Copyright (c) 2012-2016  Nagoya Institute of Technology          #
+#  Copyright (c) 2014-2016  Nagoya Institute of Technology          #
 #                           Department of Computer Science          #
 #                                                                   #
 # All rights reserved.                                              #
@@ -39,102 +39,71 @@
 # POSSIBILITY OF SUCH DAMAGE.                                       #
 # ----------------------------------------------------------------- #
 
-if ( @ARGV != 1 ) {
-   print "txtnorm.pl infile\n";
-   exit( 0 );
+if ( @ARGV < 1 ) {
+   print "interpolate.pl dimensionality infile \n";
+   exit(0);
 }
 
-$infile = $ARGV[0];
+$magicnumber = -1.0e+10;
 
-# load text
-$text = "";
-open( INPUT, "$infile" ) || die "Cannot open file: $infile";
-while ( $input = <INPUT> ) {
-   $text .= $input;
-}
-close( INPUT );
+# dimensionality of input vector
+$dim = $ARGV[0];
 
-@word = ();
-@type = ();
-@left = ();
+# open infile as a sequence of static coefficients
+open( INPUT, "$ARGV[1]" ) || die "cannot open file : $ARGV[1]";
+@STAT = stat(INPUT);
+read( INPUT, $data, $STAT[7] );
+close(INPUT);
 
-while ( $text =~ /(['0-9a-zA-Z']+)/ ) {    # digit or alphabet or apostrophe
-   my $w         = $1;
-   my $index     = index( $text, $w );
-   my $separator = substr( $text, 0, $index );
-   my $t         = "unknown";
-   my $l         = "unknown";
+$n = $STAT[7] / 4;    # number of data
+$T = $n / $dim;       # number of frames of original data
 
-   if ( $w =~ /(^[a-zA-Z]+$)/ ) {
-      $t = "alphabet";
-   }
-   elsif ( $w =~ /(^[0-9]+$)/ ) {
-      $t = "digit";
-   }
+# load original data
+@original = unpack( "f$n", $data );    # original data must be stored in float, natural endian
 
-   if ( $separator eq "-" ) {
-      $l = "hyphen";
-   }
-   else {
-      $separator =~ s/\s//g;
-      if ( $separator eq "." ) {
-         $l = "period";
-      }
-      elsif ( $separator eq "" ) {
-         $l = "space";
-      }
-      elsif ( $separator eq "," ) {
-         $l = "comma";
-      }
-      elsif ( $separator eq "?" ) {
-         $l = "question";
-      }
-      else {
-         print STDERR "WARNING: unknown separator [$separator]\n";
-         if ( index( $separator, "?" ) >= 0 ) {
-            $l = "question";
+# copy original data
+@interpolated = @original;
+
+# interpolate
+for ( $i = 0 ; $i < $dim ; $i++ ) {
+   $lastvalue = $magicnumber;
+   for ( $t = 0 ; $t < $T ; $t++ ) {
+      if ( $original[ $t * $dim + $i ] == $magicnumber ) {
+         for ( $t1 = $t + 1 ; $t1 < $T ; $t1++ ) {
+            last if ( $original[ $t1 * $dim + $i ] != $magicnumber );
          }
-      }
-   }
-
-   push( @word, $w );
-   push( @type, $t );
-   push( @left, $l );
-
-   substr( $text, 0, $index + length($w) ) = "";
-}
-
-$question = 0;
-if ( index( $text, "?" ) >= 0 ) {
-   $question = 1;
-}
-
-if ( @word < 1 ) {
-   exit( 0 );
-}
-
-for ( $i = 0 ; $i < @word ; $i++ ) {
-   if ( $i == 0 ) {
-      print "$word[$i]";
-   }
-   else {
-      if ( $type[ $i - 1 ] eq "digit" && $type[$i] eq "digit" && $left[$i] eq "period" ) {
-         print ".$word[$i]";
-      }
-      elsif ( $left[$i] eq "hyphen" ) {
-         print "-$word[$i]";
-      }
-      elsif ( $left[$i] eq "space" ) {
-         print " $word[$i]";
+         if ( $t1 < $T ) {
+            if ( $lastvalue == $magicnumber ) {
+               for ( $s = $t ; $s < $t1 ; $s++ ) {
+                  $interpolated[ $s * $dim + $i ] = $original[ $t1 * $dim + $i ];
+               }
+            }
+            else {
+               $step = ( $original[ $t1 * $dim + $i ] - $original[ ( $t - 1 ) * $dim + $i ] ) / ( $t1 - $t + 1 );
+               for ( $s = $t ; $s < $t1 ; $s++ ) {
+                  $interpolated[ $s * $dim + $i ] = $original[ ( $t - 1 ) * $dim + $i ] + $step * ( $s - $t + 1 );
+               }
+            }
+         }
+         else {
+            if ( $lastvalue == $magicnumber ) {
+               die "no valid value\n";
+            }
+            else {
+               for ( $s = $t ; $s < $T ; $s++ ) {
+                  $interpolated[ $s * $dim + $i ] = $lastvalue;
+               }
+            }
+         }
+         $t = $t1 - 1;
       }
       else {
-         print ", $word[$i]";
+         $lastvalue = $original[ $t * $dim + $i ];
+         $interpolated[ $t * $dim + $i ] = $original[ $t * $dim + $i ];
       }
    }
 }
-if ( $question ) {
-   print "?\n";
-}
-else {
-   print ".\n";
-}
+
+$data = pack( "f$n", @interpolated );
+
+print $data;

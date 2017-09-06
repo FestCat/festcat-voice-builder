@@ -5,7 +5,7 @@
 #           http://hts.sp.nitech.ac.jp/                             #
 # ----------------------------------------------------------------- #
 #                                                                   #
-#  Copyright (c) 2001-2014  Nagoya Institute of Technology          #
+#  Copyright (c) 2001-2016  Nagoya Institute of Technology          #
 #                           Department of Computer Science          #
 #                                                                   #
 #                2001-2008  Tokyo Institute of Technology           #
@@ -45,19 +45,20 @@
 
 
 # Settings ==============================
-$fclf = '@FULLCONTEXT_FORMAT@';
-$fclv = '@FULLCONTEXT_VERSION@';
-$dset = '@DATASET@';
-$spkr = '@SPEAKER@';
-$qnum = '@QNUM@';
-$ver  = '@VER@';
+$fclf        = '@FULLCONTEXT_FORMAT@';
+$fclv        = '@FULLCONTEXT_VERSION@';
+$dset        = '@DATASET@';
+$spkr        = '@SPEAKER@';
+$qname       = '@QNAME@';
+$ver         = '@VER@';
 $usestraight = '@USESTRAIGHT@';
 
-@SET        = ('cmp','dur');
-if(!$usestraight){
-@cmp        = ('mgc','lf0');
-}else{
-   @cmp     = ('mgc','lf0','bap');
+@SET = ('cmp', 'dur');
+if ( !$usestraight ) {
+   @cmp = ('mgc', 'lf0');
+}
+else {
+   @cmp = ('mgc', 'lf0', 'bap');
 }
 @dur        = ('dur');
 $ref{'cmp'} = \@cmp;
@@ -147,20 +148,16 @@ $ref{'dur'} = \@dur;
 
 %mspfe  = ('mgc' => '1.0');         # emphasis coefficient of modulation spectrum-based postfilter
 
-@slnt = ('pau','h#','brth');        # silent and pause phoneme
+@slnt   = ('pau', 'h#', 'brth');    # silent and pause phoneme
 
-#%mdcp = ('dy' => 'd',              # model copy
-#         'A'  => 'a',
-#         'I'  => 'i',
-#         'U'  => 'u',
-#         'E'  => 'e',
-#         'O'  => 'o');
+%mdcp   = ();                       # model copy
 
 
 # Speech Analysis/Synthesis Setting ==============
 # speech analysis
 $sr = @SAMPFREQ@;   # sampling rate (Hz)
 $fs = @FRAMESHIFT@; # frame period (point)
+$ft = @FFTLEN@;     # FFT length (point)
 $fw = @FREQWARP@;   # frequency warping
 $gm = @GAMMA@;      # pole/zero representation weight
 $lg = @LNGAIN@;     # use log gain instead of linear gain
@@ -187,7 +184,7 @@ $daem_nIte   = @DAEMNITER@;     # number of iterations of DAEM-based embedded tr
 $daem_alpha  = @DAEMALPHA@;     # schedule of updating temperature parameter for DAEM
 
 # generation
-$pgtype     = @PGTYPE@;     # parameter generation algorithm (0 -> Cholesky,  1 -> MixHidden,  2 -> StateHidden)
+$pgtype     = @PGTYPE@;     # parameter generation algorithm (0 -> Cholesky, 1 -> MixHidden, 2 -> StateHidden)
 $maxEMiter  = @MAXEMITER@;  # max EM iteration
 $EMepsilon  = @EMEPSILON@;  # convergence factor for EM iteration
 $useGV      = @USEGV@;      # turn on GV
@@ -206,6 +203,24 @@ $useMSPF    = @USEMSPF@;    # use modulation spectrum-based postfilter
 $mspfLength = 25;           # frame length of modulation spectrum-based postfilter (odd number)
 $mspfFFTLen = 64;           # FFT length of modulation spectrum-based postfilter (even number)
 
+# neural network
+$useDNN       = @USEDNN@;         # train a deep neural network after HMM training
+$nHiddenUnits = '@NHIDDENUNITS@'; # number of hidden units in each layer
+$activation   = @ACTIVATION@;     # activation function for hidden units  (0 -> Linear, 1 -> Sigmoid, 2 -> Tanh, 3 -> ReLU)
+$optimizer    = @OPTIMIZER@;      # optimizer (0 -> SGD, 1 -> Momentum, 2 -> AdaGrad, 3-> AdaDelta, 4 -> Adam, 5 -> RMSprop)
+$learnRate    = @LEARNRATE@;      # learning rate
+$keepProb     = @KEEPPROB@;       # probability for not randomly setting activities to zero
+$useQueue     = @USEQUEUE@;       # use queue to load training data
+$queueSize    = @QUEUESIZE@;      # queue size
+$batchSize    = @BATCHSIZE@;      # mini-batch size
+$nEpoch       = @NEPOCH@;         # number of epochs
+$nThread      = @NTHREAD@;        # number of threads
+$randomSeed   = @RANDOMSEED@;     # random seed used for initialization
+$restoreCkpt  = 0;                # checkpoint for parameter generation (0 means final checkpoint)
+$nKeep        = 5;                # number of models to keep
+$logInterval  = 100;              # output training log at regular steps
+$saveInterval = 5000;             # save model at regular steps
+
 
 # Directories & Commands ===============
 # project directories
@@ -213,6 +228,9 @@ $prjdir = '@PWD@';
 
 # Perl
 $PERL = '@PERL@';
+
+# Python
+$PYTHON = '@PYTHON@';
 
 # wc
 $WC = '@WC@';
@@ -229,42 +247,43 @@ $HMGENS    = '@HMGENS@';
 $ENGINE    = '@ENGINE@';
 
 # SPTK commands
-$X2X      = '@X2X@';
-$FREQT    = '@FREQT@';
-$C2ACR    = '@C2ACR@';
-$VOPR     = '@VOPR@';
-$VSUM     = '@VSUM@';
-$MC2B     = '@MC2B@';
-$SOPR     = '@SOPR@';
-$B2MC     = '@B2MC@';
-$EXCITE   = '@EXCITE@';
-$LSP2LPC  = '@LSP2LPC@';
-$MGC2MGC  = '@MGC2MGC@';
-$MGLSADF  = '@MGLSADF@';
-$MERGE    = '@MERGE@';
-$BCP      = '@BCP@';
-$LSPCHECK = '@LSPCHECK@';
-$MGC2SP       = '@MGC2SP@';
-$BCUT     = '@BCUT@';
-$VSTAT    = '@VSTAT@';
-$NAN      = '@NAN@';
-$DFS      = '@DFS@';
-$SWAB     = '@SWAB@';
-$RAW2WAV  = '@RAW2WAV@';
-$FRAME        = '@FRAME@';
-$WINDOW       = '@WINDOW@';
-$SPEC         = '@SPEC@';
-$TRANSPOSE    = '@TRANSPOSE@';
-$PHASE        = '@PHASE@';
-$IFFTR        = '@IFFTR@';
+$X2X       = '@X2X@';
+$FREQT     = '@FREQT@';
+$C2ACR     = '@C2ACR@';
+$VOPR      = '@VOPR@';
+$VSUM      = '@VSUM@';
+$MC2B      = '@MC2B@';
+$SOPR      = '@SOPR@';
+$B2MC      = '@B2MC@';
+$EXCITE    = '@EXCITE@';
+$LSP2LPC   = '@LSP2LPC@';
+$MGC2MGC   = '@MGC2MGC@';
+$MGLSADF   = '@MGLSADF@';
+$MERGE     = '@MERGE@';
+$BCP       = '@BCP@';
+$LSPCHECK  = '@LSPCHECK@';
+$MGC2SP    = '@MGC2SP@';
+$BCUT      = '@BCUT@';
+$VSTAT     = '@VSTAT@';
+$NAN       = '@NAN@';
+$DFS       = '@DFS@';
+$SWAB      = '@SWAB@';
+$RAW2WAV   = '@RAW2WAV@';
+$FRAME     = '@FRAME@';
+$WINDOW    = '@WINDOW@';
+$SPEC      = '@SPEC@';
+$TRANSPOSE = '@TRANSPOSE@';
+$PHASE     = '@PHASE@';
+$IFFTR     = '@IFFTR@';
+$MLPG      = '@MLPG@';
 
 # MATLAB & STRAIGHT
-$MATLAB   = '@MATLAB@';
-$STRAIGHT = '@STRAIGHT@';
+$MATLAB    = '@MATLAB@';
+$STRAIGHT  = '@STRAIGHT@';
 
 
 # Switch ================================
-$MKEMV = 1; # preparing environments
+$MKENV = 1; # preparing environments
 $HCMPV = 1; # computing a global variance
 $IN_RE = 1; # initialization & reestimation
 $MMMMF = 1; # making a monophone mmf
@@ -286,6 +305,10 @@ $PGEN1 = 0; # generating speech parameter sequences (1mix)
 $WGEN1 = 0; # synthesizing waveforms (1mix)
 $CONVM = 1; # converting mmfs to the hts_engine file format
 $ENGIN = 1; # synthesizing waveforms using hts_engine
+$MKDAT = 0; # making training data for deep neural network
+$TRDNN = 0; # training a deep neural network
+$PGEND = 0; # generating speech parameter sequences (dnn)
+$WGEND = 0; # synthesizing waveforms (dnn)
 $SEMIT = 0; # semi-tied covariance matrices
 $MKUNS = 0; # making unseen models (stc)
 $PGENS = 0; # generating speech parameter sequences (stc)
