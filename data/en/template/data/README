@@ -1,11 +1,17 @@
 Directory structure
 
+bap: Band aperiodicity extracted by STRAIGHT (4-byte float, natural endian).
+
 cmp: Training data in HTK data format (natural endian).
-     You can see these files as HList -C hlist.conf cmp/cmu_us_arctic_slt_a0001.cmp.
+     You can see these files as HList -C configs/hlist.conf cmp/cmu_us_arctic_slt_a0001.cmp.
+
+configs: Configuration files (ascii)
+
+ffo: Frame-by-frame acoustic output features (4-byte float, natural endian).
 
 labels: Context-independent and -dependent labels in HTK label format (ascii).
 
-lf0: Log fundamental frequency values extracted by SPTK (4-byte float, natural endian).
+lf0: Log-fundamental frequency values extracted by SPTK (4-byte float, natural endian).
 
 lists: Context-independent and -dependent model lists (ascii).
 
@@ -17,11 +23,15 @@ raw: 48kHz raw audio (2-byte short, little endian).
 
 scp: Data path files (ascii).
 
-scripts: shell, perl, and tcl scripts (ascii).
+scripts: Perl and other scripts (ascii).
+
+stats: Statistics of extracted features (4-byte float, natural endian).
+
+txt: Raw text (ascii).
 
 utts: Utterance information files in Festival utt format (ascii).
 
-win: windows coefficients to calculate dynamic features (ascii).
+win: Window coefficients to calculate dynamic features (ascii).
 
 
 Acknowledgment
