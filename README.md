@@ -1,20 +1,18 @@
 # FestCat Voice Builder
 
-This set of Makefiles and templates have been written to ease the building 
-of [HTS](http://hts.sp.nitech.ac.jp/) voices in Catalan for the [FestCat](http://www.talp.cat/festcat) project.
+This set of Makefiles and templates have been written to automate the building of
+[HTS](http://hts.sp.nitech.ac.jp/) voices in:
 
-It also supports builing HTS voices based on the [ARCTIC](http://festvox.org/cmu_arctic/) dataset.
+- Catalan for the [FestCat](http://festcat.talp.cat) project
+- English, with the [ARCTIC](http://festvox.org/cmu_arctic/) dataset
 
 This Makefiles and templates can be extended to support building of HTS voices 
 in other languages.
 
-# Dependencies
+# Quick Start
 
-## Dependencies which you need to install
+1. Install dependencies. You will need some general utilities:
 
-Some dependencies are not installed automatically:
-
-1. General utilities such as:
    - C, C++ compilers
    - make
    - autoconf
@@ -22,8 +20,26 @@ Some dependencies are not installed automatically:
    - sox
    - perl
    - csh
+   - I believe I also needed the Debian package `libx11-dev` to build HTS
+     and *maybe?* tcl-snack. Sorry for not providing more details.
 
-2. I also needed the Debian package `libx11-dev` to build HTS and *maybe?* tcl-snack. Sorry for not providing more details.
+2. Register and agree to the HTK license at http://htk.eng.cam.ac.uk/ You need
+   the HTK user name and password so HTK can be downloaded.
+
+3. Train a voice. The training can take time, GB of disk and a fair amount of RAM.
+   For instance, training the ona Catalan voice may take several days, <10 GB of
+   hard disk space with peaks of >8??GB of RAM. In order to train HTS voices, run:
+
+
+    ./configure htk_user="yourhtkuser" htk_password="yourhtkpassword"
+    make ca_ona.spk
+    make ca_bet.spk
+    make ca_pau.spk
+    make en_slt.spk
+    make en_awb.spk
+
+
+# Dependencies
 
 ## Language independent tools automatically downloaded, built and run
 
@@ -32,10 +48,10 @@ compiled and installed automatically to the `tools` directory.
 
 1. [Speech Tools 2.4-release](http://festvox.org/packed/festival/)
 2. [Festival 2.4-release](http://festvox.org/packed/festival/)
-3. [SPTK 3.8](http://sourceforge.net/projects/sp-tk)
-4. [HTS-2.3beta](http://hts.sp.nitech.ac.jp/) for [HTK-3.4.1](http://htk.eng.cam.ac.uk/) (downloading HTK requires a [user and password](http://htk.eng.cam.ac.uk/register.shtml), as well as agreeing to the [non-free license](http://htk.eng.cam.ac.uk/docs/license.shtml))
+3. [SPTK 3.10](http://sourceforge.net/projects/sp-tk)
+4. [HTS-2.3.1](http://hts.sp.nitech.ac.jp/) for [HTK-3.4.1](http://htk.eng.cam.ac.uk/) (downloading HTK requires a [user and password](http://htk.eng.cam.ac.uk/register.shtml), as well as agreeing to the [non-free license](http://htk.eng.cam.ac.uk/docs/license.shtml))
 5. [HDecode 3.4.1](http://htk.eng.cam.ac.uk/) (it has similar restrictions to HTK)
-6. [hts_engine 1.09](http://sourceforge.net/projects/hts-engine)
+6. [hts_engine 1.10](http://sourceforge.net/projects/hts-engine)
 
 
 ## Language specific tools

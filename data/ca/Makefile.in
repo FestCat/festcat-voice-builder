@@ -6,9 +6,12 @@ depsdir = @PWD@/deps
 toolsdir = @PWD@/tools
 workdir = @WORKDIR@
 datdir = @PWD@/data
+srcdatdir = "@top_srcdir@/data"
 resultsdir = @PWD@/results
 LANG = "ca"
 DATASET = "upc_ca"
+
+SPEAKERPROPERTIES = "@top_srcdir@/data/$(LANG)/speakerprop.sh"
 
 SOX = @SOX@
 
@@ -56,20 +59,20 @@ download_upc_ca_base:
 %.spk: %.download lang_ca
 	$(eval SPK := $(word 2,$(subst _,$(space),$*)))
 	# speakerprop.sh has some environment variables that are passed to the configure script \
-	. $(datdir)/$(LANG)/speakerprop.sh $(SPK) && \
+	. $(SPEAKERPROPERTIES) $(SPK) && \
 	# If the workdir is not properly setup: \
 	if test ! -f $(workdir)/$*/hts/configure.ac  -o  ! -d $(workdir)/$*/hts/data/utts/  -o   ! -f $(workdir)/$*/hts/data/utts/*.utt  ; then \
 		# delete the workdir and re-create it. \
 		rm -rf $(workdir)/$* && mkdir -p $(workdir)/$* && \
 		# Copy the language generic and language specific hts demo files: \
 		mkdir -p $(workdir)/$*/hts && \
-		cp -r $(datdir)/template_hts/* $(workdir)/$*/hts && \
-		cp -r $(datdir)/$(LANG)/template_hts/* $(workdir)/$*/hts && \
+		cp -r $(srcdatdir)/template_hts/* $(workdir)/$*/hts && \
+		cp -r $(srcdatdir)/$(LANG)/template_hts/* $(workdir)/$*/hts && \
 		# Copy the language generic and language specific packaging files: \
 		mkdir -p $(workdir)/$*/pkg && \
-		cp -r $(datdir)/template_package/* $(workdir)/$*/pkg && \
+		cp -r $(srcdatdir)/template_package/* $(workdir)/$*/pkg && \
 		# Copy over the catalan specific template: \
-		cp -r $(datdir)/$(LANG)/template_package/* $(workdir)/$*/pkg && \
+		cp -r $(srcdatdir)/$(LANG)/template_package/* $(workdir)/$*/pkg && \
 		# Customize the required festvox files \
 		sed -e s/SPEAKER/$(SPK)/g -e s/GENDER/$${GENDER}/g -e s/DIALECT/$${DIALECT}/g < $(workdir)/$*/pkg/skeleton/festvox/$(DATASET)_SPEAKER_hts.scm > $(workdir)/$*/pkg/skeleton/festvox/$(DATASET)_$(SPK)_hts.scm && \
 		# Remove the copied but templated file: \

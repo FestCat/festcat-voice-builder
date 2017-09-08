@@ -18,7 +18,7 @@
 @DATASET@_@SPEAKER@_hts.tgz:
 	rm -rf "@DATASET@_@SPEAKER@_hts"
 	cp -r skeleton "@DATASET@_@SPEAKER@_hts"
-	cp "voices/ver1/@DATASET@_@SPEAKER@.htsvoice" "@DATASET@_@SPEAKER@_hts/hts"
+	cp "../hts/voices/ver1/@DATASET@_@SPEAKER@.htsvoice" "@DATASET@_@SPEAKER@_hts/hts"
 	mv "@DATASET@_@SPEAKER@_hts/configure.ac" "@DATASET@_@SPEAKER@_hts/configure.ac.tmp"
 	sed s/!VOICENAME!/@DATASET@_@SPEAKER@_hts/g < "@DATASET@_@SPEAKER@_hts/configure.ac.tmp"  > \
 	     "@DATASET@_@SPEAKER@_hts/configure.ac"

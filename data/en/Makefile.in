@@ -6,9 +6,12 @@ depsdir = @PWD@/deps
 toolsdir = @PWD@/tools
 workdir = @WORKDIR@
 datdir = @PWD@/data
+srcdatdir = "@top_srcdir@/data"
 resultsdir = @PWD@/results
 LANG = "en"
 DATASET = "cmu_us"
+
+SPEAKERPROPERTIES = "@top_srcdir@/data/$(LANG)/speakerprop.sh"
 
 SOX = @SOX@
 
@@ -76,21 +79,22 @@ $(download_all):
 # It also starts the required training and final voice package creation rules.
 %.spk: %.download lang_en
 	$(eval SPK := $(word 2,$(subst _,$(space),$*)))
+	$(eval DATASET := "cmu_us")
 	# speakerprop.sh has some environment variables that are passed to the configure script \
-	. $(datdir)/$(LANG)/speakerprop.sh $(SPK) && \
+	. $(SPEAKERPROPERTIES) $(SPK) && \
 	# If the workdir is not properly setup: \
-	if test ! -f $(workdir)/$*/hts/configure.ac  -o  ! -d $(workdir)/$*/hts/data/utts/  -o   ! -f $(workdir)/$*/hts/data/utts/*.utt  ; then \
+	if test ! -f $(workdir)/$*/hts/configure.ac  -o  ! -d $(workdir)/$*/hts/data/utts/  -o ! "`ls -A $(workdir)/$*/hts/data/utts/`"  ; then \
 		# delete the workdir and re-create it. \
 		rm -rf $(workdir)/$* && mkdir -p $(workdir)/$* && \
 		# Copy the language generic and language specific hts demo files: \
 		mkdir -p $(workdir)/$*/hts && \
-		cp -r $(datdir)/template_hts/* $(workdir)/$*/hts && \
-		cp -r $(datdir)/$(LANG)/template_hts/* $(workdir)/$*/hts && \
+		cp -r $(srcdatdir)/template_hts/* $(workdir)/$*/hts && \
+		cp -r $(srcdatdir)/$(LANG)/template_hts/* $(workdir)/$*/hts && \
 		# Copy the language generic and language specific packaging files: \
 		mkdir -p $(workdir)/$*/pkg && \
-		cp -r $(datdir)/template_package/* $(workdir)/$*/pkg && \
+		cp -r $(srcdatdir)/template_package/* $(workdir)/$*/pkg && \
 		# Copy over the catalan specific template: \
-		cp -r $(datdir)/$(LANG)/template_package/* $(workdir)/$*/pkg && \
+		cp -r $(srcdatdir)/$(LANG)/template_package/* $(workdir)/$*/pkg && \
 		# Customize the required festvox files: \
 		for mytemplatescm in $$(ls $(workdir)/$*/pkg/skeleton/festvox/*SPEAKER*); do \
 		    mycustomscm=$$(echo $$mytemplatescm | sed s/SPEAKER/$(SPK)/g) && \
@@ -133,11 +137,11 @@ $(download_all):
 	$(MAKE) voice ) && \
 	( cd $(workdir)/$*/pkg && \
 	# Prepare a tar.gz file with the final files needed by festival \
-	sed -e s/@SPEAKER@/$${SPEAKER}/g -e s/@DATASET@/$${DATASET}/g < Makefile.in > Makefile \
+	sed -e s/@SPEAKER@/$(SPK)/g -e s/@DATASET@/$${DATASET}/g < Makefile.in > Makefile && \
 	$(MAKE) $(DATASET)_$(SPK)_hts.tgz && \
 	# Copy this tar.gz file to the results directory \
 	mkdir -p $(resultsdir) && \
-	cp $(workdir)/$*/$(DATASET)_$(SPK)_hts.tgz $(resultsdir) ) || exit 1
+	cp $(workdir)/$*/pkg/$(DATASET)_$(SPK)_hts.tgz $(resultsdir) ) || exit 1
 
 
 %.download:
