@@ -37,7 +37,7 @@ in other languages.
     make ca_pau.spk
     make en_slt.spk
     make en_awb.spk
-
+    make fr_zoe.spk
 
 # Dependencies
 

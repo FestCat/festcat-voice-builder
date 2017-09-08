@@ -1,0 +1,111 @@
+#!/usr/bin/make
+# @configure_input@
+
+# Basic needed directories.
+depsdir = @PWD@/deps
+toolsdir = @PWD@/tools
+workdir = @WORKDIR@
+datdir = @PWD@/data
+srcdatdir = "@top_srcdir@/data"
+resultsdir = @PWD@/results
+LANG = "fr"
+DATASET = "siwis_fr"
+
+SPEAKERPROPERTIES = "@top_srcdir@/data/$(LANG)/speakerprop.sh"
+
+SOX = @SOX@
+
+WGET = @WGET@
+
+SPKNAMES = zoe
+
+# I need these two rules for manipulating spaces
+empty:=
+space:= $(empty) $(empty)
+
+.PHONY: all %.spk
+
+all: lang_fr fr_zoe.spk
+
+
+lang_fr:
+	echo "fr languages have no extra dependencies"
+
+
+# This sets up the working directory to be able to train the ARCTIC voice.
+# It also starts the required training and final voice package creation rules.
+%.spk: %.download lang_fr
+	$(eval SPK := $(word 2,$(subst _,$(space),$*)))
+	$(eval DATASET := "siwis_fr")
+	# speakerprop.sh has some environment variables that are passed to the configure script \
+	. $(SPEAKERPROPERTIES) $(SPK) && \
+	# If the workdir is not properly setup: \
+	if test ! -f $(workdir)/$*/hts/configure.ac  -o  ! -d $(workdir)/$*/hts/data/utts/  -o ! "`ls -A $(workdir)/$*/hts/data/utts/`"  ; then \
+		# delete the workdir and re-create it. \
+		rm -rf $(workdir)/$* && mkdir -p $(workdir)/$* && \
+		# Copy the language generic and language specific hts demo files: \
+		mkdir -p $(workdir)/$*/hts && \
+		cp -r $(srcdatdir)/template_hts/* $(workdir)/$*/hts && \
+		cp -r $(srcdatdir)/$(LANG)/template_hts/* $(workdir)/$*/hts && \
+		# Copy the language generic and language specific packaging files: \
+		#mkdir -p $(workdir)/$*/pkg && \
+		#cp -r $(srcdatdir)/template_package/* $(workdir)/$*/pkg && \
+		# Copy over the language specific template: \
+		#cp -r $(srcdatdir)/$(LANG)/template_package/* $(workdir)/$*/pkg && \
+		# Create a directory to store the raw and utt files \
+		mkdir -p "$(workdir)/$*/hts/data/raw" "$(workdir)/$*/hts/data/utts" && \
+		# Extract the wav files \
+		unzip $(datdir)/$(LANG)/$*/SiwisFrenchSpeechSynthesisDatabase.zip  'SiwisFrenchSpeechSynthesisDatabase/wavs/part1/*.wav' && \
+                unzip $(datdir)/$(LANG)/$*/SiwisFrenchSpeechSynthesisDatabase.zip  'SiwisFrenchSpeechSynthesisDatabase/wavs/part2/*.wav' && \
+		mv SiwisFrenchSpeechSynthesisDatabase/wavs/part1/*.wav SiwisFrenchSpeechSynthesisDatabase/wavs/ && \
+                mv SiwisFrenchSpeechSynthesisDatabase/wavs/part2/*.wav SiwisFrenchSpeechSynthesisDatabase/wavs/ && \
+		# Convert using sox the wav files to raw files \
+		for wavfile in $$(ls SiwisFrenchSpeechSynthesisDatabase/wavs/*.wav); do \
+		    echo "Converting $$wavfile" && \
+		    NAME_WITHOUT_WAV=$$(basename $${wavfile%.*}) && \
+		    rawfile="$(workdir)/$*/hts/data/raw/$(DATASET)_$(SPK)_$${NAME_WITHOUT_WAV}.raw" && \
+		    $(SOX) "$$wavfile" -r 44100 -e signed-integer -b 16 "$$rawfile";  \
+		done; \
+		# Extract the labels: \
+                unzip $(datdir)/$(LANG)/$*/SiwisFrenchSpeechSynthesisDatabase.zip  'SiwisFrenchSpeechSynthesisDatabase/labs/part1/*.lab' && \
+                unzip $(datdir)/$(LANG)/$*/SiwisFrenchSpeechSynthesisDatabase.zip  'SiwisFrenchSpeechSynthesisDatabase/labs/part2/*.lab' && \
+                mv SiwisFrenchSpeechSynthesisDatabase/labs/part1/*.lab SiwisFrenchSpeechSynthesisDatabase/labs/ && \
+                mv SiwisFrenchSpeechSynthesisDatabase/labs/part2/*.lab SiwisFrenchSpeechSynthesisDatabase/labs/ && \
+		mkdir -p $(workdir)/$*/hts/data/labels/full_orig && \
+                mkdir -p $(workdir)/$*/hts/data/labels/full && \
+                mkdir -p $(workdir)/$*/hts/data/labels/mono && \
+		for orig_lab_file in $$(ls SiwisFrenchSpeechSynthesisDatabase/labs/*.lab); do \
+		    LABBASENAME="$$(basename $${orig_lab_file})" && \
+		    outfile_orig="$(workdir)/$*/hts/data/labels/full_orig/$(DATASET)_$(SPK)_$${LABBASENAME}" && \
+		    mv "$${orig_lab_file}" "$${outfile_orig}" ; \
+		done; \
+		PYTHONPATH="$(srcdatdir)/$(LANG)/" python3 $(srcdatdir)/$(LANG)/fix_labels.py $(workdir)/$*/hts/data/lab/ && \
+		$(RM) -rf SiwisFrenchSpeechSynthesisDatabase/; \
+	fi; \
+	# Now the workdir is ready, let's train the voice \
+	( cd $(workdir)/$*/hts && \
+	# The configure script will tell the training scripts where the tools are and will set up \
+	# some properties of our speaker. This is strongly based on the HTS demo. \
+	./configure --with-fest-search-path=$(toolsdir)/festival/examples \
+		    --with-sptk-search-path=$(toolsdir)/bin \
+	            --with-hts-search-path=$(toolsdir)/bin  \
+	            --with-hts-engine-search-path=$(toolsdir)/bin \
+	            SPEAKER=$(SPK) && \
+	# Data analysis and voice training, again this is based on the HTS demo \
+	$(MAKE) data && \
+	$(MAKE) voice ) && \
+	# Copy this htsvoice file to the results directory \
+	mkdir -p $(resultsdir) && \
+	cp $(workdir)/$*/hts/voices/ver1/*.htsvoice $(resultsdir) || exit 1
+
+%.download:
+	$(eval SPK := $(word 2,$(subst _,$(space),$*)))
+	mkdir -p "$*" && cd "$*" && \
+	[ -f "SiwisFrenchSpeechSynthesisDatabase.zip" ] && echo "$(SPK) already downloaded" || \
+	$(WGET) --output-document=SiwisFrenchSpeechSynthesisDatabase.zip http://datashare.is.ed.ac.uk/bitstream/handle/10283/2353/SiwisFrenchSpeechSynthesisDatabase.zip?sequence=3&isAllowed=y
+
+clean:
+	$(RM) -rf $(addprefix ca_,$(SPKNAMES))
+
+distclean: clean
+	$(RM) -rf Makefile

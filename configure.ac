@@ -53,7 +53,7 @@ WORKDIR=$PWD/work
 AC_ARG_VAR(WORKDIR,AS_HELP_STRING([WORKDIR=/directory/to/work/on],[specify the directory to work on]))
 AC_SUBST(WORKDIR)
 
-AC_CONFIG_FILES([Makefile deps/Makefile data/en/Makefile data/ca/Makefile])
+AC_CONFIG_FILES([Makefile deps/Makefile data/en/Makefile data/ca/Makefile data/fr/Makefile])
 
 AC_OUTPUT
 
