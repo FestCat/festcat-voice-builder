@@ -79,7 +79,7 @@ lang_fr:
 		    outfile_orig="$(workdir)/$*/hts/data/labels/full_orig/$(DATASET)_$(SPK)_$${LABBASENAME}" && \
 		    mv "$${orig_lab_file}" "$${outfile_orig}" ; \
 		done; \
-		PYTHONPATH="$(srcdatdir)/$(LANG)/" python3 $(srcdatdir)/$(LANG)/fix_labels.py $(workdir)/$*/hts/data/lab/ && \
+		PYTHONPATH="$(srcdatdir)/$(LANG)/" python3 $(srcdatdir)/$(LANG)/fix_labels.py $(workdir)/$*/hts/data/labels/ && \
 		$(RM) -rf SiwisFrenchSpeechSynthesisDatabase/; \
 	fi; \
 	# Now the workdir is ready, let's train the voice \
