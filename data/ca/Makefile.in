@@ -91,6 +91,8 @@ download_upc_ca_base:
 		tar xjf $(datdir)/$(LANG)/$*/upc_$*_utt.tar.bz2 -C $(datdir)/$(LANG)/$*  && \
 		# Place the utt files in the working directory \
 		mv $(datdir)/$(LANG)/$*/upc_$*_utt/utt/*.utt $(workdir)/$*/hts/data/utts && \
+		# Remove sample that causes error: \
+		if test "ca_ona" = "$*"; then rm $(workdir)/$*/hts/data/raw/upc_ca_ona_300171.raw; fi; \
 		# Clean up \
 		$(RM) -rf $(datdir)/$(LANG)/$*/upc_$*_utt/; \
 	fi; \
