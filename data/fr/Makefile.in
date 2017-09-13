@@ -80,6 +80,8 @@ lang_fr:
 		    mv "$${orig_lab_file}" "$${outfile_orig}" ; \
 		done; \
 		PYTHONPATH="$(srcdatdir)/$(LANG)/" python3 $(srcdatdir)/$(LANG)/fix_labels.py $(workdir)/$*/hts/data/labels/ && \
+        # Remove truncated label \
+        if test "$*" = "fr_zoe"; then rm $(workdir)/$*/hts/data/labels/siwis_fr_zoe_neut_book_s01_0004.lab; fi; \
 		$(RM) -rf SiwisFrenchSpeechSynthesisDatabase/; \
 	fi; \
 	# Now the workdir is ready, let's train the voice \
