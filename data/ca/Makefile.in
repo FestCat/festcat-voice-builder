@@ -110,11 +110,11 @@ download_upc_ca_base:
 	$(MAKE) voice ) && \
 	( cd $(workdir)/$*/pkg && \
 	# Prepare a tar.gz file with the final files needed by festival \
-	sed -e s/@SPEAKER@/$${SPEAKER}/g -e s/@DATASET@/$${DATASET}/g < Makefile.in > Makefile \
+	sed -e s/@SPEAKER@/$${SPEAKER}/g -e s/@DATASET@/$${DATASET}/g < Makefile.in > Makefile && \
 	$(MAKE) $(DATASET)_$(SPK)_hts.tgz && \
 	# Copy this tar.gz file to the results directory \
 	mkdir -p $(resultsdir) && \
-	cp $(workdir)/$*/$(DATASET)_$(SPK)_hts.tgz $(resultsdir) ) || exit 1
+	cp $(workdir)/$*/pkg/$(DATASET)_$(SPK)_hts.tgz $(resultsdir) ) || exit 1
 
 # General rule to download a FestCat voice (download utt and raw)
 %.download: %.downutt %.downraw
