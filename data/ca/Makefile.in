@@ -93,6 +93,7 @@ download_upc_ca_base:
 		mv $(datdir)/$(LANG)/$*/upc_$*_utt/utt/*.utt $(workdir)/$*/hts/data/utts && \
 		# Remove sample that causes error: \
 		if test "ca_ona" = "$*"; then rm $(workdir)/$*/hts/data/raw/upc_ca_ona_300171.raw; fi; \
+		if test "ca_pep" = "$*"; then rm $(workdir)/$*/hts/data/raw/upc_ca_pep_203192.raw; fi; \
 		# Clean up \
 		$(RM) -rf $(datdir)/$(LANG)/$*/upc_$*_utt/; \
 	fi; \
