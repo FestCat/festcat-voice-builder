@@ -186,14 +186,26 @@ def full_to_mono(fulldir, monodir):
             print("\n".join([" ".join(x) for x in labinfo]), file=fd)
 
 def replace_phone_N_by_n(labinfo):
-    phones = ["p1", "p2", "p3", "p4", "p5"]
+    phone_features = ["p1", "p2", "p3", "p4", "p5", "b16"]
     output = []
     for label in labinfo:
-        for ph in phones:
+        for ph in phone_features:
             if label[ph] == "N":
                 label[ph] = "n"
         output.append(label)
     return output
+
+
+def replace_phone_at_by_ax(labinfo):
+    phone_features = ["p1", "p2", "p3", "p4", "p5", "b16"]
+    output = []
+    for label in labinfo:
+        for ph in phone_features:
+            if label[ph] == "@":
+                label[ph] = "ax"
+        output.append(label)
+    return output
+
 
 def fix_lastlabel(labinfo):
     output = labinfo
@@ -230,6 +242,7 @@ def ensure_c1_c2_logical(labinfo):
 
 def fix_labinfo(labinfo):
     labinfo = replace_phone_N_by_n(labinfo)
+    labinfo = replace_phone_at_by_ax(labinfo)
     labinfo = replace_x_by_xx(labinfo)
     labinfo = fix_lastlabel(labinfo)
     labinfo = ensure_c1_c2_logical(labinfo)
