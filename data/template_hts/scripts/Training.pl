@@ -51,6 +51,7 @@ if ( @ARGV < 1 ) {
 }
 
 # load configuration variables
+use lib '.';
 require( $ARGV[0] );
 
 # model structure
