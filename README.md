@@ -31,13 +31,13 @@ in other languages.
    hard disk space with peaks of >8??GB of RAM. In order to train HTS voices, run:
 
 
-    ./configure htk_user="yourhtkuser" htk_password="yourhtkpassword"
-    make ca_ona.spk
-    make ca_bet.spk
-    make ca_pau.spk
-    make en_slt.spk
-    make en_awb.spk
-    make fr_zoe.spk
+        ./configure htk_user="yourhtkuser" htk_password="yourhtkpassword"
+        make ca_ona.spk
+        make ca_bet.spk
+        make ca_pau.spk
+        make en_slt.spk
+        make en_awb.spk
+        make fr_zoe.spk
 
 # Dependencies
 
